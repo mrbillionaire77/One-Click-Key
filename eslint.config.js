@@ -28,7 +28,7 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      // Handled strictly by `tsc --noEmit` (TypeScript 7.0)
+      // Handled strictly by `tsc --noEmit`
       'no-undef': 'off',
       'no-unused-vars': 'off',
       // Security & cryptographic hygiene
