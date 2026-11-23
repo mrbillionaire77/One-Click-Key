@@ -1,0 +1,116 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * One-Click Key Design System Tokens
+ * Palette: Deep Obsidian (#0D0D0D / #161616), Crisp Off-White (#F7F5F2), Warm Espresso/Bronze (#8B5E3C / #A47148)
+ * Zero external CDNs — all font weights bundled locally via @fontsource in main.tsx
+ */
+
+:root {
+  --background: #F7F5F2;
+  --surface: #FFFFFF;
+  --surface-muted: #EFECE6;
+  --foreground: #0D0D0D;
+  --muted-foreground: #59534B;
+  --border: #E0DAD0;
+  --border-strong: #C9C0B3;
+  --accent: #8B5E3C;
+  --accent-hover: #734C2F;
+  --accent-foreground: #F7F5F2;
+  --accent-subtle: #F2EAE2;
+  --ring: #8B5E3C;
+  --destructive: #B91C1C;
+  --destructive-subtle: #FEF2F2;
+  --warning: #B45309;
+  --warning-subtle: #FFFBEB;
+  --success: #15803D;
+  --success-subtle: #F0FDF4;
+  --font-sans-latin: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-sans-arabic: 'IBM Plex Sans Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono-tech: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dark {
+  --background: #0D0D0D;
+  --surface: #161616;
+  --surface-muted: #1E1D1B;
+  --foreground: #F7F5F2;
+  --muted-foreground: #A69F95;
+  --border: #282522;
+  --border-strong: #3D3833;
+  --accent: #A47148;
+  --accent-hover: #8B5E3C;
+  --accent-foreground: #0D0D0D;
+  --accent-subtle: #241C16;
+  --ring: #A47148;
+  --destructive: #F87171;
+  --destructive-subtle: #2A1414;
+  --warning: #FBBF24;
+  --warning-subtle: #292012;
+  --success: #4ADE80;
+  --success-subtle: #112619;
+}
+
+@layer base {
+  html {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans-latin);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  html[dir='rtl'] {
+    font-family: var(--font-sans-arabic);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  .dark body {
+    letter-spacing: 0.005em;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  code,
+  pre,
+  kbd,
+  .font-mono {
+    font-family: var(--font-mono-tech);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Guarantees 0ms instant Dark/Light theme switching with zero color/border fade */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

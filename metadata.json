@@ -1,0 +1,6 @@
+{
+  "name": "One-Click Key",
+  "description": "100% client-side, offline-first, open-source Android Keystore (.jks / .p12) generator compatible with Google Play App Signing and Android Gradle Plugin.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
