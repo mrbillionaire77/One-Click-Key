@@ -1,10 +1,15 @@
 import { GitHubIcon } from '@/components/GitHubIcon';
+import { routeToHash, type AppRoute } from '@/features/docs/router';
 import { useI18n } from '@/i18n';
 
 const REPO_URL = 'https://github.com/mrbillionaire77/One-Click-Key';
 const AUTHOR_URL = 'https://github.com/mrbillionaire77';
 
-export function AppFooter() {
+interface AppFooterProps {
+  onNavigate?: (route: AppRoute) => void;
+}
+
+export function AppFooter({ onNavigate }: AppFooterProps) {
   const { t } = useI18n();
 
   return (
@@ -19,6 +24,21 @@ export function AppFooter() {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {onNavigate && (
+            <>
+              <a
+                href={routeToHash('/docs/setup/1')}
+                onClick={(event) => {
+                  event.preventDefault();
+                  onNavigate('/docs/setup/1');
+                }}
+                className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded-sm"
+              >
+                {t.footer.beginnerGuide}
+              </a>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           <span>
             {t.footer.createdBy}{' '}
             <a

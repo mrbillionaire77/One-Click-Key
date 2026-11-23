@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { GitHubIcon } from '@/components/GitHubIcon';
 import { PWAInstallButton } from '@/components/PWAInstallButton';
+import { routeToHash, type AppRoute } from '@/features/docs/router';
 import { useI18n } from '@/i18n';
 import type { Locale } from '@/i18n/types';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 interface AppHeaderProps {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  onNavigate: (route: AppRoute) => void;
 }
 
 const REPO_URL = 'https://github.com/mrbillionaire77/One-Click-Key';
@@ -19,7 +21,7 @@ const LANGUAGE_OPTIONS: ReadonlyArray<{ code: Locale; nativeLabel: string; dir: 
   { code: 'ar', nativeLabel: 'العربية', dir: 'rtl' },
 ];
 
-export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
+export function AppHeader({ theme, onToggleTheme, onNavigate }: AppHeaderProps) {
   const { t, locale, changeLocale, isSwitchingLocale } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement | null>(null);
@@ -61,18 +63,25 @@ export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--background)]/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2.5 min-w-0 shrink-0">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
+        <a
+          href={routeToHash('/')}
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigate('/');
+          }}
+          className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+        >
           <BrandLogo size={30} className="shrink-0" />
           <span
             dir="ltr"
-            className="text-base font-bold tracking-tight text-[var(--foreground)] whitespace-nowrap shrink-0"
+            className="text-sm sm:text-base font-bold tracking-tight text-[var(--foreground)] whitespace-nowrap shrink-0 [unicode-bidi:isolate]"
           >
             {t.meta.brandName}
           </span>
-        </div>
+        </a>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <PWAInstallButton />
 
           {/* Explicit Language Dropdown Menu */}
@@ -84,7 +93,7 @@ export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-transparent px-3 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)] hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50"
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[var(--border)] bg-transparent px-2.5 sm:px-3 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)] hover:border-[var(--border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50"
             >
               <Languages className="h-3.5 w-3.5 text-[var(--accent)]" aria-hidden="true" />
               <span>{currentLangLabel}</span>
@@ -101,7 +110,7 @@ export function AppHeader({ theme, onToggleTheme }: AppHeaderProps) {
               <div
                 role="menu"
                 aria-label={t.header.selectLanguage}
-                className="absolute end-0 mt-1.5 w-40 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-1 shadow-lg z-40"
+                className="absolute end-0 mt-1.5 w-40 max-w-[calc(100vw-1rem)] rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-1 shadow-lg z-40"
               >
                 {LANGUAGE_OPTIONS.map((option) => {
                   const isActive = option.code === locale;

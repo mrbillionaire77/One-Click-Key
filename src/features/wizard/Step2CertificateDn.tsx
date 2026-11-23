@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FieldTooltip } from '@/components/ui/tooltip';
 import { useI18n } from '@/i18n';
+import { formatCertificateDate } from '@/lib/formatDate';
 import { cn } from '@/lib/utils';
 import {
   computeExpiryDate,
@@ -89,13 +90,7 @@ export function Step2CertificateDn({ form, onChange, onBack, onNext }: Step2Prop
   const computedExpiry = hasValidYears ? computeExpiryDate(parsedYears) : null;
   const meetsPlayRule = computedExpiry !== null && computedExpiry > GOOGLE_PLAY_MIN_EXPIRY;
 
-  const formattedExpiry = computedExpiry
-    ? new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }).format(computedExpiry)
-    : null;
+  const formattedExpiry = computedExpiry ? formatCertificateDate(computedExpiry, locale) : null;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-8">
@@ -266,22 +261,34 @@ export function Step2CertificateDn({ form, onChange, onBack, onNext }: Step2Prop
             <FieldTooltip text={t.step2.validityTooltip} label={t.step2.validityLabel} />
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {VALIDITY_PRESETS.map((preset) => {
               const isActive = form.validityYears === String(preset);
               return (
                 <button
                   key={preset}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => updateField('validityYears', String(preset))}
                   className={cn(
-                    'min-h-[34px] rounded-md border px-2.5 text-xs font-mono tabular-nums cursor-pointer',
+                    'inline-flex min-h-[34px] items-center gap-1 rounded-md border px-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer',
                     isActive
                       ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)] font-semibold'
                       : 'border-[var(--border)] bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
                   )}
                 >
-                  {preset}y
+                  {locale === 'ar' ? (
+                    <>
+                      <span dir="ltr" className="font-mono tabular-nums [unicode-bidi:isolate]">
+                        {preset}
+                      </span>
+                      <span>{t.step2.validityUnit}</span>
+                    </>
+                  ) : (
+                    <span dir="ltr" className="font-mono tabular-nums [unicode-bidi:isolate]">
+                      {preset}y
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -289,8 +296,15 @@ export function Step2CertificateDn({ form, onChange, onBack, onNext }: Step2Prop
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:w-44">
-            <Input
+          <div
+            className={cn(
+              'flex min-h-[44px] w-full sm:w-44 items-center rounded-lg border bg-[var(--background)] focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-offset-[var(--background)]',
+              touched.validityYears && errors.validityYears
+                ? 'border-[var(--destructive)] focus-within:ring-[var(--destructive)]'
+                : 'border-[var(--border)] hover:border-[var(--border-strong)] focus-within:ring-[var(--ring)]',
+            )}
+          >
+            <input
               id="validity-years"
               name="validityYears"
               dir="ltr"
@@ -299,20 +313,20 @@ export function Step2CertificateDn({ form, onChange, onBack, onNext }: Step2Prop
               max={100}
               step={1}
               value={form.validityYears}
-              hasError={Boolean(touched.validityYears && errors.validityYears)}
+              aria-invalid={Boolean(touched.validityYears && errors.validityYears) || undefined}
               onChange={(e) => updateField('validityYears', e.target.value)}
               onBlur={() => markTouched('validityYears')}
-              className="pe-16 font-mono tabular-nums"
+              className="min-w-0 flex-1 bg-transparent px-3.5 py-2.5 font-mono text-sm tabular-nums text-[var(--foreground)] focus:outline-none"
             />
-            <span className="pointer-events-none absolute inset-y-0 end-3.5 flex items-center text-xs text-[var(--muted-foreground)]">
+            <span className="shrink-0 pe-3.5 text-xs text-[var(--muted-foreground)] select-none">
               {t.step2.validityUnit}
             </span>
           </div>
 
           {formattedExpiry && meetsPlayRule && (
-            <div className="flex items-center gap-2 text-xs text-[var(--success)]">
-              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>
+            <div className="flex items-start gap-2 text-xs text-[var(--success)] sm:items-center">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" aria-hidden="true" />
+              <span className="leading-relaxed">
                 {t.step2.expiresOn}{' '}
                 <strong className="font-semibold tabular-nums">{formattedExpiry}</strong>
                 <span aria-hidden="true" className="mx-1.5 text-[var(--muted-foreground)]">

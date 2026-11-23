@@ -7,6 +7,9 @@ import {
   generateKeystoreSync,
   generatePositiveSerialHex,
 } from '@/crypto/pkcs12';
+import { ar } from '@/i18n/ar';
+import { en } from '@/i18n/en';
+import { formatCertificateDate } from '@/lib/formatDate';
 import {
   FORBIDDEN_PASSWORD_CHARS_REGEX,
   GOOGLE_PLAY_MIN_EXPIRY,
@@ -223,5 +226,49 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
     expect(cmd).toBe(
       'keytool -list -v -keystore upload-key-keystore.jks -storetype PKCS12 -alias upload-key',
     );
+  });
+});
+
+function collectStrings(obj: unknown): string[] {
+  if (typeof obj === 'string') return [obj];
+  if (obj && typeof obj === 'object') {
+    return Object.values(obj).flatMap((v) => collectStrings(v));
+  }
+  return [];
+}
+
+function collectKeys(obj: unknown, prefix = ''): string[] {
+  if (!obj || typeof obj !== 'object') return [];
+  return Object.entries(obj).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    return typeof value === 'object' && value !== null ? collectKeys(value, path) : [path];
+  });
+}
+
+describe('Western Numerals (0-9) & Bilingual Dictionary Integrity', () => {
+  const EASTERN_INDIC_NUMERALS = /[\u0660-\u0669\u06F0-\u06F9]/;
+
+  it('formats Arabic and English certificate dates strictly with Western digits (0-9)', () => {
+    const sampleDate = new Date(Date.UTC(2056, 9, 22, 12, 0, 0));
+    const arFormatted = formatCertificateDate(sampleDate, 'ar');
+    const enFormatted = formatCertificateDate(sampleDate, 'en');
+
+    expect(EASTERN_INDIC_NUMERALS.test(arFormatted)).toBe(false);
+    expect(EASTERN_INDIC_NUMERALS.test(enFormatted)).toBe(false);
+    expect(arFormatted).toContain('2056');
+    expect(arFormatted).toContain('22');
+    expect(enFormatted).toContain('2056');
+    expect(enFormatted).toContain('22');
+  });
+
+  it('contains zero Eastern Arabic/Indic numerals and exact EN/AR key parity', () => {
+    const arStrings = collectStrings(ar);
+    const enStrings = collectStrings(en);
+
+    for (const text of [...arStrings, ...enStrings]) {
+      expect(EASTERN_INDIC_NUMERALS.test(text)).toBe(false);
+    }
+
+    expect(collectKeys(ar).sort()).toEqual(collectKeys(en).sort());
   });
 });

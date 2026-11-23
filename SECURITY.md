@@ -5,7 +5,7 @@
 **One-Click Key** is engineered to operate with zero network trust:
 
 - **100% Client-Side Cryptographic Execution**: RSA keypair generation (`2048-bit` or `4096-bit`), X.509v3 certificate signing (`SHA-256 with RSA`), and PKCS#12 serialization execute strictly inside an isolated browser Web Worker.
-- **Zero Outbound Network Requests**: Deployed with a strict Content Security Policy (`connect-src 'none'`) via `public/_headers` so application scripts cannot initiate `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, or `sendBeacon` requests.
+- **Zero Outbound Network Requests**: Deployed with a strict Content Security Policy (`connect-src 'none'`) in both `index.html` (`<meta http-equiv="Content-Security-Policy">`) and `public/_headers` (HTTP response headers on Cloudflare Pages) so application scripts cannot initiate `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, or `sendBeacon` requests.
 - **Zero External CDNs**: All dependencies (including `node-forge` and typography) are bundled locally through `npm` and precached by the offline Service Worker.
 - **Zero Persistent Secret Storage**: Passwords, private keys, and generated binary artifacts are never written to `localStorage`, `sessionStorage`, IndexedDB, cookies, or `console.log`.
 - **Explicit Memory Wipe**: Step 4 provides a **Wipe Memory & Reset** control that zeroes the generated `Uint8Array` buffer (`fill(0)`), clears volatile React state, and terminates the dedicated cryptographic Web Worker.

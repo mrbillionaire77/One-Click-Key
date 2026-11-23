@@ -22,6 +22,10 @@ export const en: Translations = {
     iosGuideStep2: 'Scroll down and choose Add to Home Screen for full offline access.',
     close: 'Close',
   },
+  guidePrompt: {
+    text: 'New to Android signing?',
+    cta: 'Follow the step-by-step beginner guide',
+  },
   steps: {
     stepLabel: 'Step',
     step1Short: 'Key & Security',
@@ -199,5 +203,6 @@ export const en: Translations = {
     licenseNotice: 'MIT License · Attribution required',
     createdBy: 'Maintained by',
     sourceCode: 'Source Repository',
+    beginnerGuide: 'Beginner Guide',
   },
 };

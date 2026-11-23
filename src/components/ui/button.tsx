@@ -17,7 +17,7 @@ const buttonVariants = cva(
         ghost:
           'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]',
         destructive:
-          'bg-[var(--destructive-subtle)] text-[var(--destructive)] border border-[var(--destructive)]/30 hover:bg-[var(--destructive)] hover:text-white',
+          'bg-[var(--destructive-subtle)] text-[var(--destructive)] border border-[var(--destructive)]/30 hover:bg-[var(--destructive)] hover:text-white dark:hover:text-[#0D0D0D]',
       },
       size: {
         default: 'min-h-[44px] px-4 py-2.5',

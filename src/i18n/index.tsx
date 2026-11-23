@@ -31,7 +31,7 @@ function detectInitialLocale(): Locale {
   return preferred.toLowerCase().startsWith('ar') ? 'ar' : 'en';
 }
 
-// Overlay stays solid while flipping document dir/lang cleanly underneath (total ~950ms, well under 2s)
+// Apply locale and dir changes while concealed behind the full-screen overlay
 const APPLY_LOCALE_DELAY_MS = 180;
 const OVERLAY_TOTAL_DURATION_MS = 950;
 

@@ -26,6 +26,10 @@ export interface Translations {
     iosGuideStep2: string;
     close: string;
   };
+  guidePrompt: {
+    text: string;
+    cta: string;
+  };
   steps: {
     stepLabel: string;
     step1Short: string;
@@ -161,5 +165,6 @@ export interface Translations {
     licenseNotice: string;
     createdBy: string;
     sourceCode: string;
+    beginnerGuide: string;
   };
 }

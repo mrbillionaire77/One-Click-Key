@@ -6,7 +6,7 @@ export const ar: Translations = {
     tagline: 'مولّد مفاتيح أندرويد دون اتصال بالإنترنت',
     offlineBadge: 'جاهز للعمل دون إنترنت · صفر اتصال بالشبكة',
     onlineHint: 'متصل حالياً — يمكنك فصل الإنترنت بأمان قبل التوليد',
-    offlineActive: 'وضع عدم الاتصال — يعمل محلياً بنسبة 100%',
+    offlineActive: 'وضع عدم الاتصال — يعمل محلياً بنسبة \u2066100%\u2069',
   },
   header: {
     selectLanguage: 'اختيار اللغة',
@@ -21,6 +21,10 @@ export const ar: Translations = {
     iosGuideStep1: 'اضغط على زر المشاركة (Share) في متصفح Safari.',
     iosGuideStep2: 'مرّر للأسفل واختر «إضافة إلى الشاشة الرئيسية» للعمل دون إنترنت.',
     close: 'إغلاق',
+  },
+  guidePrompt: {
+    text: 'مبتدئ أو لا تعرف كيف تستخدم الموقع؟',
+    cta: 'تصفّح الدليل التعليمي خطوة بخطوة',
   },
   steps: {
     stepLabel: 'الخطوة',
@@ -71,7 +75,7 @@ export const ar: Translations = {
     passwordLabel: 'كلمة مرور المتجر والمفتاح (Password)',
     passwordPlaceholder: 'أدخل كلمة مرور قوية أو قم بتوليدها',
     passwordTooltip:
-      'تعتمد ملفات PKCS#12 الحديثة في Java 17+ كلمة مرور موحّدة لكل من storePassword و keyPassword.',
+      'تعتمد ملفات \u2066PKCS#12\u2069 الحديثة في \u2066Java 17+\u2069 كلمة مرور موحّدة لكل من \u2066storePassword\u2069 و \u2066keyPassword\u2069.',
     generatePassword: 'توليد كلمة مرور آمنة',
     showPassword: 'إظهار كلمة المرور',
     hidePassword: 'إخفاء كلمة المرور',
@@ -87,7 +91,7 @@ export const ar: Translations = {
       strong: 'قوية جداً',
     },
     safeCharsetNote:
-      'أحرف ASCII قياسية فقط. يستبعد تلقائياً الرموز التي تسبب أخطاء في Gradle والطرفية (" \' \\ $).',
+      'أحرف ASCII قياسية فقط. يستبعد تلقائياً الرموز التي تسبب أخطاء في Gradle والطرفية (\u2066" \' \\ $\u2069).',
     continueBtn: 'المتابعة إلى بيانات الشهادة',
   },
   step2: {
@@ -141,32 +145,32 @@ export const ar: Translations = {
       validating: 'التحقق الصارم من المدخلات عبر Zod…',
       'generating-keypair': 'توليد زوج مفاتيح RSA داخل Web Worker معزول…',
       'signing-certificate': 'توقيع شهادة X.509v3 بخوارزمية SHA-256…',
-      'packaging-pkcs12': 'تجميع ملف PKCS#12 المتوافق مع Java 17+ وحساب البصمات…',
+      'packaging-pkcs12': 'تجميع ملف \u2066PKCS#12\u2069 المتوافق مع \u2066Java 17+\u2069 وحساب البصمات…',
     },
     errorHeading: 'تعذّر إكمال عملية التوليد',
   },
   step4: {
     successNotice:
-      'تم التوليد محلياً داخل الذاكرة برقم تسلسلي عشوائي موجب (CSPRNG) وترميز UTF-8 متوافق مع Java 17+.',
+      'تم التوليد محلياً داخل الذاكرة برقم تسلسلي عشوائي موجب (CSPRNG) وترميز UTF-8 متوافق مع \u2066Java 17+\u2069.',
     downloadHeading: 'تحميل ملف المفتاح (Keystore)',
-    downloadJks: 'تحميل بصيغة .jks (موصى به)',
-    downloadP12: 'تحميل بصيغة .p12 (PKCS#12)',
+    downloadJks: 'تحميل بصيغة \u2066.jks\u2069 (موصى به)',
+    downloadP12: 'تحميل بصيغة \u2066.p12\u2069 (\u2066PKCS#12\u2069)',
     downloadHint:
-      'الملفان متطابقان تماماً ببنية PKCS#12 القياسية. اختر .jks للتسمية الشائعة في Android Studio أو .p12 للتسمية القياسية الصريحة.',
+      'الملفان متطابقان تماماً ببنية \u2066PKCS#12\u2069 القياسية. اختر \u2066.jks\u2069 للتسمية الشائعة في Android Studio أو \u2066.p12\u2069 للتسمية القياسية الصريحة.',
     fingerprintsHeading: 'بصمات الشهادة الرقمية والبيانات التقنية',
-    sha1Label: 'بصمة SHA-1',
-    sha256Label: 'بصمة SHA-256',
+    sha1Label: 'بصمة \u2066SHA-1\u2069',
+    sha256Label: 'بصمة \u2066SHA-256\u2069',
     serialLabel: 'الرقم التسلسلي (Hex)',
     validUntilLabel: 'تاريخ الانتهاء',
     base64Heading: 'ترميز Base64 لأسرار GitHub Actions',
     base64Hint:
-      'احفظه كـ KEYSTORE_BASE64 في أسرار المستودع وفك ترميزه أثناء البناء عبر base64 --decode.',
+      'احفظه كـ \u2066KEYSTORE_BASE64\u2069 في أسرار المستودع وفك ترميزه أثناء البناء عبر \u2066base64 --decode\u2069.',
     gradleHeading: 'إعدادات التوقيع في Android Gradle',
     gradleKotlinTab: 'Kotlin DSL (build.gradle.kts)',
     gradleGroovyTab: 'Groovy DSL (build.gradle)',
     gradleHint:
       'يقرأ بيانات الاعتماد من متغيرات البيئة لتجنب رفع كلمات المرور إلى مستودع Git.',
-    keytoolHeading: 'أمر التحقق المحلي عبر Java 17+ keytool',
+    keytoolHeading: 'أمر التحقق المحلي عبر \u2066Java 17+ keytool\u2069',
     keytoolHint: 'نفّذ هذا الأمر بعد التحميل للتأكد من PrivateKeyEntry ومطابقة البصمات.',
     copyBtn: 'نسخ',
     copiedBtn: 'تم النسخ',
@@ -186,7 +190,7 @@ export const ar: Translations = {
     passwordMinLength: 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.',
     passwordMaxLength: 'يجب ألا تتجاوز كلمة المرور 128 حرفاً.',
     passwordAsciiOnly: 'استخدم أحرف ASCII قياسية قابلة للطباعة فقط (دون مسافات أو أحرف عربية).',
-    passwordForbiddenChars: 'تجنب الرموز التي تسبب مشاكل في Gradle والطرفية: " \' \\ $',
+    passwordForbiddenChars: 'تجنب الرموز التي تسبب مشاكل في Gradle والطرفية: \u2066" \' \\ $\u2069',
     dnRequired: 'هذا الحقل مطلوب في الشهادة.',
     dnMaxLength: 'يجب ألا يتجاوز النص 64 حرفاً.',
     dnUnsafeChars: 'أحرف التحكم والأسطر الجديدة غير مسموح بها.',
@@ -199,5 +203,6 @@ export const ar: Translations = {
     licenseNotice: 'رخصة MIT · يجب الإشارة للمصدر عند إعادة الاستخدام',
     createdBy: 'تطوير',
     sourceCode: 'المستودع المفتوح',
+    beginnerGuide: 'الدليل التعليمي',
   },
 };

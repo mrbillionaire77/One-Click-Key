@@ -122,7 +122,7 @@ export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
     <form onSubmit={handleSubmit} noValidate className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
-          {t.step1.aliasLabel && t.steps.step1Title}
+          {t.steps.step1Title}
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)]">
           {t.steps.step1Subtitle}
@@ -168,7 +168,11 @@ export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
           <FieldTooltip text={t.step1.keySizeTooltip} label={t.step1.keySizeLabel} />
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div
+          role="radiogroup"
+          aria-label={t.step1.keySizeLabel}
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+        >
           {keySizes.map((item) => {
             const isSelected = form.keySize === item.size;
             return (
@@ -186,7 +190,10 @@ export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
-                  <span dir="ltr" className="font-mono text-sm font-semibold text-[var(--foreground)]">
+                  <span
+                    dir="ltr"
+                    className="font-mono text-sm font-semibold text-[var(--foreground)] [unicode-bidi:isolate]"
+                  >
                     {item.title}
                   </span>
                   {item.recommended && (
@@ -221,57 +228,64 @@ export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
           </Button>
         </div>
 
-        <div className="relative flex items-center gap-2">
-          <div className="relative flex-1">
-            <Input
-              id="keystore-password"
-              name="password"
-              dir="ltr"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              spellCheck={false}
-              value={form.password}
-              placeholder={t.step1.passwordPlaceholder}
-              hasError={Boolean(touched.password && errors.password)}
-              aria-describedby="password-note password-error"
-              onChange={(e) => handlePasswordChange(e.target.value)}
-              onBlur={() => {
-                setTouched((prev) => ({ ...prev, password: true }));
-                validateFields(form);
+        <div
+          className={cn(
+            'flex min-h-[44px] w-full items-center rounded-lg border bg-[var(--background)] focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-offset-[var(--background)]',
+            touched.password && errors.password
+              ? 'border-[var(--destructive)] focus-within:ring-[var(--destructive)]'
+              : 'border-[var(--border)] hover:border-[var(--border-strong)] focus-within:ring-[var(--ring)]',
+          )}
+        >
+          <input
+            id="keystore-password"
+            name="password"
+            dir="ltr"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            spellCheck={false}
+            value={form.password}
+            placeholder={t.step1.passwordPlaceholder}
+            aria-invalid={Boolean(touched.password && errors.password) || undefined}
+            aria-describedby={
+              touched.password && errors.password ? 'password-note password-error' : 'password-note'
+            }
+            onChange={(e) => handlePasswordChange(e.target.value)}
+            onBlur={() => {
+              setTouched((prev) => ({ ...prev, password: true }));
+              validateFields(form);
+            }}
+            className="min-w-0 flex-1 bg-transparent px-3.5 py-2.5 font-mono text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/70 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          <div className="flex shrink-0 items-center gap-1 pe-1.5">
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? t.step1.hidePassword : t.step1.showPassword}
+              title={showPassword ? t.step1.hidePassword : t.step1.showPassword}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              disabled={!form.password}
+              onClick={() => {
+                void handleCopyPassword();
               }}
-              className="pe-24 font-mono"
-            />
-            <div className="absolute inset-y-0 end-1.5 flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? t.step1.hidePassword : t.step1.showPassword}
-                title={showPassword ? t.step1.hidePassword : t.step1.showPassword}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                )}
-              </button>
-              <button
-                type="button"
-                disabled={!form.password}
-                onClick={() => {
-                  void handleCopyPassword();
-                }}
-                aria-label={copiedPassword ? t.step1.copied : t.step1.copyPassword}
-                title={copiedPassword ? t.step1.copied : t.step1.copyPassword}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer"
-              >
-                {copiedPassword ? (
-                  <Check className="h-4 w-4 text-[var(--success)]" aria-hidden="true" />
-                ) : (
-                  <Copy className="h-4 w-4" aria-hidden="true" />
-                )}
-              </button>
-            </div>
+              aria-label={copiedPassword ? t.step1.copied : t.step1.copyPassword}
+              title={copiedPassword ? t.step1.copied : t.step1.copyPassword}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer"
+            >
+              {copiedPassword ? (
+                <Check className="h-4 w-4 text-[var(--success)]" aria-hidden="true" />
+              ) : (
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -296,8 +310,14 @@ export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
               </strong>
             </span>
             {strength.entropyBits > 0 && (
-              <span dir="ltr" className="font-mono tabular-nums text-[var(--muted-foreground)]">
-                ~{strength.entropyBits} {t.step1.entropyUnit}
+              <span className="inline-flex items-center gap-1 text-[var(--muted-foreground)]">
+                <span
+                  dir="ltr"
+                  className="font-mono tabular-nums [unicode-bidi:isolate]"
+                >
+                  ~{strength.entropyBits}
+                </span>
+                <span>{t.step1.entropyUnit}</span>
               </span>
             )}
           </div>

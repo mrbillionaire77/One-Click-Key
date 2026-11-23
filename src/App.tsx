@@ -1,11 +1,11 @@
-import { CheckCircle2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { AppFooter } from '@/components/AppFooter';
 import { AppHeader } from '@/components/AppHeader';
 import { LanguageSwitchOverlay } from '@/components/LanguageSwitchOverlay';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { useKeystoreWorker } from '@/crypto/useKeystoreWorker';
+import { isDocsAppRoute, routeToHash, useHashRoute, type AppRoute } from '@/features/docs/router';
 import { Step1KeySecurity } from '@/features/wizard/Step1KeySecurity';
 import { Step2CertificateDn } from '@/features/wizard/Step2CertificateDn';
 import { Step3ReviewGenerate } from '@/features/wizard/Step3ReviewGenerate';
@@ -19,14 +19,26 @@ import {
 import { I18nProvider, useI18n } from '@/i18n';
 import { keystoreInputSchema } from '@/schemas/keystore.schema';
 
+const DocsShell = lazy(() => import('@/features/docs/DocsShell'));
+
+function DocsLoadingFallback() {
+  return (
+    <main className="mx-auto flex w-full max-w-6xl flex-1 items-center justify-center px-4 py-20">
+      <Loader2 className="h-6 w-6 animate-spin text-[var(--accent)]" aria-hidden="true" />
+    </main>
+  );
+}
+
 function WizardWorkspace({
   theme,
   onToggleTheme,
+  onNavigate,
 }: {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  onNavigate: (route: AppRoute) => void;
 }) {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const [step, setStep] = useState<WizardStep>(1);
   const [maxReachedStep, setMaxReachedStep] = useState<WizardStep>(1);
   const [form, setForm] = useState<WizardFormState>(INITIAL_WIZARD_STATE);
@@ -79,7 +91,7 @@ function WizardWorkspace({
 
   return (
     <div className="flex min-h-dvh flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <AppHeader theme={theme} onToggleTheme={onToggleTheme} />
+      <AppHeader theme={theme} onToggleTheme={onToggleTheme} onNavigate={onNavigate} />
       <MobileStepBar currentStep={step} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
@@ -113,64 +125,110 @@ function WizardWorkspace({
             onSelectStep={navigateToStep}
           />
 
-          <div className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-              >
-                {step === 1 && (
-                  <Step1KeySecurity
-                    form={form}
-                    onChange={updateForm}
-                    onNext={() => {
-                      setWipedNotice(false);
-                      navigateToStep(2);
-                    }}
-                  />
-                )}
+          <div className="min-w-0 flex-1 space-y-4">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {step === 1 && (
+                    <Step1KeySecurity
+                      form={form}
+                      onChange={updateForm}
+                      onNext={() => {
+                        setWipedNotice(false);
+                        navigateToStep(2);
+                      }}
+                    />
+                  )}
 
-                {step === 2 && (
-                  <Step2CertificateDn
-                    form={form}
-                    onChange={updateForm}
-                    onBack={() => navigateToStep(1)}
-                    onNext={() => navigateToStep(3)}
-                  />
-                )}
+                  {step === 2 && (
+                    <Step2CertificateDn
+                      form={form}
+                      onChange={updateForm}
+                      onBack={() => navigateToStep(1)}
+                      onNext={() => navigateToStep(3)}
+                    />
+                  )}
 
-                {step === 3 && (
-                  <Step3ReviewGenerate
-                    form={form}
-                    isGenerating={isGenerating}
-                    stage={stage}
-                    error={error}
-                    onEditStep={(target) => navigateToStep(target)}
-                    onBack={() => navigateToStep(2)}
-                    onGenerate={handleGenerate}
-                    onCancel={cancel}
-                  />
-                )}
+                  {step === 3 && (
+                    <Step3ReviewGenerate
+                      form={form}
+                      isGenerating={isGenerating}
+                      stage={stage}
+                      error={error}
+                      onEditStep={(target) => navigateToStep(target)}
+                      onBack={() => navigateToStep(2)}
+                      onGenerate={handleGenerate}
+                      onCancel={cancel}
+                    />
+                  )}
 
-                {step === 4 && artifact && (
-                  <Step4DownloadWipe artifact={artifact} onWipe={handleWipeAndReset} />
+                  {step === 4 && artifact && (
+                    <Step4DownloadWipe artifact={artifact} onWipe={handleWipeAndReset} />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Subtle, understated Beginner Guide prompt */}
+            <a
+              href={routeToHash('/docs/setup/1')}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate('/docs/setup/1');
+              }}
+              className="group flex min-h-[44px] flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-3 text-xs sm:text-sm hover:border-[var(--border-strong)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            >
+              <span className="text-[var(--muted-foreground)]">{t.guidePrompt.text}</span>
+              <span className="inline-flex items-center gap-1.5 font-medium text-[var(--accent)] group-hover:underline underline-offset-4">
+                <span>{t.guidePrompt.cta}</span>
+                {dir === 'rtl' ? (
+                  <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                ) : (
+                  <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 )}
-              </motion.div>
-            </AnimatePresence>
+              </span>
+            </a>
           </div>
         </div>
       </main>
 
-      <AppFooter />
+      <AppFooter onNavigate={onNavigate} />
     </div>
   );
 }
 
+function AppRouterShell({
+  theme,
+  onToggleTheme,
+}: {
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
+}) {
+  const { route, navigate } = useHashRoute();
+
+  if (isDocsAppRoute(route)) {
+    return (
+      <div className="flex min-h-dvh flex-col bg-[var(--background)] text-[var(--foreground)]">
+        <AppHeader theme={theme} onToggleTheme={onToggleTheme} onNavigate={navigate} />
+        <Suspense fallback={<DocsLoadingFallback />}>
+          <DocsShell route={route} onNavigate={navigate} />
+        </Suspense>
+        <AppFooter onNavigate={navigate} />
+      </div>
+    );
+  }
+
+  return <WizardWorkspace theme={theme} onToggleTheme={onToggleTheme} onNavigate={navigate} />;
+}
+
 export default function App() {
-  // Dark Mode by default per architectural specification
+  // Dark Mode is enabled by default
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
@@ -204,10 +262,8 @@ export default function App() {
 
   return (
     <I18nProvider>
-      <TooltipProvider delayDuration={180}>
-        <LanguageSwitchOverlay />
-        <WizardWorkspace theme={theme} onToggleTheme={handleToggleTheme} />
-      </TooltipProvider>
+      <LanguageSwitchOverlay />
+      <AppRouterShell theme={theme} onToggleTheme={handleToggleTheme} />
     </I18nProvider>
   );
 }

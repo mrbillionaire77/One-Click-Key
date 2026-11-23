@@ -25,17 +25,25 @@ export function MobileStepBar({ currentStep }: { currentStep: WizardStep }) {
 
   return (
     <div className="sticky top-14 z-20 border-b border-[var(--border)] bg-[var(--background)]/95 backdrop-blur-sm lg:hidden">
-      <div className="mx-auto flex h-11 max-w-6xl items-center justify-between px-4 text-xs">
-        <span className="font-semibold text-[var(--foreground)]">
-          <span className="tabular-nums text-[var(--accent)]">
+      <div className="mx-auto flex h-11 max-w-6xl items-center justify-between gap-2 px-4 text-xs">
+        <span className="flex min-w-0 items-center font-semibold text-[var(--foreground)]">
+          <span
+            dir="ltr"
+            className="shrink-0 font-mono tabular-nums text-[var(--accent)] [unicode-bidi:isolate]"
+          >
             0{currentStep} / 04
           </span>
-          <span aria-hidden="true" className="mx-2 text-[var(--border-strong)]">
+          <span aria-hidden="true" className="mx-2 shrink-0 text-[var(--border-strong)]">
             ·
           </span>
-          <span>{labels[currentStep]}</span>
+          <span className="truncate">{labels[currentStep]}</span>
         </span>
-        <span className="text-[var(--muted-foreground)] tabular-nums">{progressPercent}%</span>
+        <span
+          dir="ltr"
+          className="shrink-0 font-mono tabular-nums text-[var(--muted-foreground)] [unicode-bidi:isolate]"
+        >
+          {progressPercent}%
+        </span>
       </div>
       <div className="h-0.5 w-full bg-[var(--surface-muted)]">
         <div
@@ -106,8 +114,9 @@ export function DesktopStepRail({
                   )}
                 >
                   <span
+                    dir="ltr"
                     className={cn(
-                      'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-mono tabular-nums',
+                      'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-mono tabular-nums [unicode-bidi:isolate]',
                       isCurrent
                         ? 'bg-[var(--accent)] text-[var(--accent-foreground)] font-semibold'
                         : isDone
@@ -132,19 +141,19 @@ export function DesktopStepRail({
         <dl className="space-y-2.5 text-xs">
           <div className="flex items-center justify-between gap-2">
             <dt className="text-[var(--muted-foreground)]">{t.sideRail.formatLabel}</dt>
-            <dd dir="ltr" className="font-mono text-[var(--foreground)]">
+            <dd dir="ltr" className="font-mono text-[var(--foreground)] [unicode-bidi:isolate]">
               {t.sideRail.formatValue}
             </dd>
           </div>
           <div className="flex items-center justify-between gap-2">
             <dt className="text-[var(--muted-foreground)]">{t.sideRail.signatureLabel}</dt>
-            <dd dir="ltr" className="font-mono text-[var(--foreground)]">
+            <dd dir="ltr" className="font-mono text-[var(--foreground)] [unicode-bidi:isolate]">
               {t.sideRail.signatureValue}
             </dd>
           </div>
           <div className="flex items-center justify-between gap-2">
             <dt className="text-[var(--muted-foreground)]">{t.sideRail.encryptionLabel}</dt>
-            <dd dir="ltr" className="font-mono text-[var(--foreground)]">
+            <dd dir="ltr" className="font-mono text-[var(--foreground)] [unicode-bidi:isolate]">
               {t.sideRail.encryptionValue}
             </dd>
           </div>

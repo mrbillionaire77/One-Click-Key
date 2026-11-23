@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { buildGradleSnippet, buildKeytoolVerifyCommand } from '@/crypto/formatters';
 import type { GeneratedKeystoreArtifact } from '@/crypto/worker-types';
 import { useI18n } from '@/i18n';
+import { formatCertificateDate } from '@/lib/formatDate';
 import { cn } from '@/lib/utils';
 
 interface Step4Props {
@@ -35,16 +36,13 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
   const gradleSnippet = buildGradleSnippet(artifact.alias, gradleDsl, jksFilename);
   const keytoolCommand = buildKeytoolVerifyCommand(artifact.alias, jksFilename);
 
-  const formattedExpiry = new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(artifact.notAfterIso));
+  const formattedExpiry = formatCertificateDate(new Date(artifact.notAfterIso), locale);
 
   const triggerDownload = (filename: string) => {
-    // Copy bytes into a fresh Uint8Array for the Blob and revoke URL immediately after click
+    // Copy bytes into a fresh Uint8Array for the Blob, wipe the temp buffer, and revoke URL after click
     const copy = new Uint8Array(artifact.p12Bytes);
     const blob = new Blob([copy], { type: 'application/x-pkcs12' });
+    copy.fill(0);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -136,7 +134,7 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
                 <p className="text-xs font-medium text-[var(--muted-foreground)]">{item.label}</p>
                 <p
                   dir="ltr"
-                  className="break-all font-mono text-xs leading-relaxed text-[var(--foreground)]"
+                  className="break-all font-mono text-xs leading-relaxed text-[var(--foreground)] [unicode-bidi:isolate]"
                 >
                   {item.value}
                 </p>
@@ -167,8 +165,14 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
 
           <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 text-xs">
             <span className="text-[var(--muted-foreground)]">{t.step4.validUntilLabel}</span>
-            <span className="font-medium tabular-nums text-[var(--foreground)]">
-              {formattedExpiry} · RSA {artifact.keySize}-bit
+            <span className="inline-flex flex-wrap items-center gap-x-1.5 font-medium text-[var(--foreground)]">
+              <span className="tabular-nums">{formattedExpiry}</span>
+              <span aria-hidden="true" className="text-[var(--muted-foreground)]">
+                ·
+              </span>
+              <span dir="ltr" className="font-mono tabular-nums [unicode-bidi:isolate]">
+                RSA {artifact.keySize}-bit
+              </span>
             </span>
           </div>
         </div>
@@ -180,11 +184,11 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
           <h2 className="text-sm font-semibold text-[var(--foreground)]">
             {t.step4.gradleHeading}
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
             <div
               role="tablist"
               aria-label={t.step4.gradleHeading}
-              className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-0.5"
+              className="inline-flex max-w-full items-center rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-0.5"
             >
               <button
                 type="button"
@@ -192,13 +196,16 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
                 aria-selected={gradleDsl === 'kotlin'}
                 onClick={() => setGradleDsl('kotlin')}
                 className={cn(
-                  'rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap cursor-pointer',
+                  'rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer',
                   gradleDsl === 'kotlin'
                     ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-xs'
                     : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
                 )}
               >
-                {t.step4.gradleKotlinTab}
+                <span dir="ltr" className="[unicode-bidi:isolate]">
+                  Kotlin DSL
+                  <span className="hidden sm:inline"> (build.gradle.kts)</span>
+                </span>
               </button>
               <button
                 type="button"
@@ -206,13 +213,16 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
                 aria-selected={gradleDsl === 'groovy'}
                 onClick={() => setGradleDsl('groovy')}
                 className={cn(
-                  'rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap cursor-pointer',
+                  'rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer',
                   gradleDsl === 'groovy'
                     ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-xs'
                     : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
                 )}
               >
-                {t.step4.gradleGroovyTab}
+                <span dir="ltr" className="[unicode-bidi:isolate]">
+                  Groovy DSL
+                  <span className="hidden sm:inline"> (build.gradle)</span>
+                </span>
               </button>
             </div>
 
@@ -241,7 +251,7 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
 
         <pre
           dir="ltr"
-          className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 font-mono text-xs leading-relaxed text-[var(--foreground)]"
+          className="max-w-full overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 font-mono text-xs leading-relaxed text-[var(--foreground)] [unicode-bidi:isolate]"
         >
           <code>{gradleSnippet}</code>
         </pre>
@@ -282,7 +292,7 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
 
         <pre
           dir="ltr"
-          className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5 font-mono text-xs text-[var(--foreground)]"
+          className="max-w-full overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5 font-mono text-xs text-[var(--foreground)] [unicode-bidi:isolate]"
         >
           <code>{keytoolCommand}</code>
         </pre>
@@ -341,7 +351,7 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
         {revealBase64 && (
           <pre
             dir="ltr"
-            className="max-h-36 overflow-auto break-all whitespace-pre-wrap rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5 font-mono text-xs text-[var(--foreground)]"
+            className="max-h-36 max-w-full overflow-auto break-all whitespace-pre-wrap rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5 font-mono text-xs text-[var(--foreground)] [unicode-bidi:isolate]"
           >
             <code>{artifact.base64}</code>
           </pre>

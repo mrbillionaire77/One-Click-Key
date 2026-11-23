@@ -56,7 +56,11 @@ export function LanguageSwitchOverlay() {
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="h-full w-full origin-left bg-[var(--accent)]"
+                className={
+                  activeTarget === 'ar'
+                    ? 'h-full w-full origin-right bg-[var(--accent)]'
+                    : 'h-full w-full origin-left bg-[var(--accent)]'
+                }
               />
             </div>
           </motion.div>
