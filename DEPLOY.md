@@ -18,8 +18,8 @@ This repository includes a ready-to-use GitHub Actions workflow at `.github/work
 3. **Trigger Your First Deployment**
    - Push any commit to the `main` branch, or open the **Actions** tab → select **Deploy One-Click Key to GitHub Pages** → click **Run workflow**.
 4. **Automatic Subpath & PWA Handling**
-   - You do **not** need to edit `vite.config.ts` manually.
-   - The workflow automatically detects your repository name and sets `VITE_BASE_PATH="/<your-repo-name>/"` (or `"/"` if your repository is named `<username>.github.io` or includes `public/CNAME`).
+   - You do **not** need to edit `vite.config.ts` or configure `VITE_BASE_PATH` manually.
+   - The workflow uses `actions/configure-pages@v6` to read your live GitHub Pages `base_path` directly (`/<your-repo-name>/` for project pages, or `/` for `<username>.github.io` and custom domains) and verifies the built `dist/index.html` asset paths before deployment.
    - Vite and `vite-plugin-pwa` automatically align all asset URLs, favicon links, Service Worker scope, and Web App Manifest `start_url`, `scope`, and icon paths to match your subpath.
 
 ### Verify Your Live GitHub Pages Build
@@ -36,10 +36,7 @@ This repository includes a ready-to-use GitHub Actions workflow at `.github/work
 If you bind a custom domain to GitHub Pages (e.g., `keys.example.com`):
 
 1. Configure your custom domain in **Settings** → **Pages** → **Custom domain**.
-2. Either add your domain to `public/CNAME` or create a repository variable in **Settings** → **Secrets and variables** → **Actions** → **Variables**:
-   - Name: `VITE_BASE_PATH`
-   - Value: `/`
-3. Re-run the deployment workflow so assets and PWA manifest resolve from `/`.
+2. Re-run the deployment workflow — `actions/configure-pages@v6` automatically detects the custom domain and resolves `VITE_BASE_PATH` to `/` so all assets and the PWA manifest load from the domain root.
 
 ---
 

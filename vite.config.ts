@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 function normalizeBasePath(rawBase?: string): string {
-  const trimmed = rawBase?.trim();
+  const trimmed = rawBase?.trim().replace(/^["']|["']$/g, '').trim();
   if (!trimmed || trimmed === '/') {
     return '/';
   }

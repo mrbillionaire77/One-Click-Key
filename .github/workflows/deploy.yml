@@ -19,12 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
@@ -43,35 +44,34 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      - name: Resolve GitHub Pages base path
-        id: pages_base
-        env:
-          CUSTOM_BASE: ${{ vars.VITE_BASE_PATH }}
-        run: |
-          if [ -n "$CUSTOM_BASE" ]; then
-            echo "base=$CUSTOM_BASE" >> "$GITHUB_OUTPUT"
-          elif [ -f public/CNAME ]; then
-            echo "base=/" >> "$GITHUB_OUTPUT"
-          else
-            REPO_NAME="${{ github.event.repository.name }}"
-            OWNER_PAGES="${{ github.repository_owner }}.github.io"
-            if [ "${REPO_NAME,,}" = "${OWNER_PAGES,,}" ]; then
-              echo "base=/" >> "$GITHUB_OUTPUT"
-            else
-              echo "base=/${REPO_NAME}/" >> "$GITHUB_OUTPUT"
-            fi
-          fi
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v6
 
       - name: Build production PWA bundle
         env:
-          VITE_BASE_PATH: ${{ steps.pages_base.outputs.base }}
-        run: npm run build
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || '/' }}
+        run: |
+          echo "Resolved GitHub Pages URL: ${{ steps.pages.outputs.base_url }}"
+          echo "Building One-Click Key with VITE_BASE_PATH=${VITE_BASE_PATH}"
+          npm run build
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Verify production asset base path
+        env:
+          RAW_BASE: ${{ steps.pages.outputs.base_path || '/' }}
+        run: |
+          EXPECTED_BASE="$RAW_BASE"
+          if [ "$EXPECTED_BASE" != "/" ]; then
+            EXPECTED_BASE="/${EXPECTED_BASE#/}"
+            EXPECTED_BASE="${EXPECTED_BASE%/}/"
+          fi
+          echo "Verifying dist/index.html uses base path: ${EXPECTED_BASE}"
+          grep -q "src=\"${EXPECTED_BASE}assets/" dist/index.html
+          grep -q "href=\"${EXPECTED_BASE}assets/" dist/index.html
+          grep -q "href=\"${EXPECTED_BASE}manifest.webmanifest\"" dist/index.html
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist
 
@@ -84,4 +84,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
