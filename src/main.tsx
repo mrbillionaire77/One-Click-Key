@@ -14,9 +14,20 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import {
+  notifyPwaUpdateAvailable,
+  registerPwaUpdateHandler,
+} from './components/PWAUpdateBanner';
 import './index.css';
 
-registerSW({ immediate: true });
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    notifyPwaUpdateAvailable();
+  },
+});
+
+registerPwaUpdateHandler(() => updateSW(true));
 
 const rootEl = document.getElementById('root');
 if (rootEl) {

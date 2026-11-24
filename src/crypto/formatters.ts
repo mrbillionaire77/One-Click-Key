@@ -82,3 +82,17 @@ export function buildKeytoolConvertToJksCommand(
 ): string {
   return `keytool -importkeystore -srckeystore ${p12Filename} -srcstoretype PKCS12 -destkeystore ${jksFilename} -deststoretype JKS`;
 }
+
+/**
+ * Encodes a Uint8Array into standard Base64 without stack overflow on large buffers
+ * and without importing `node-forge` into the main UI bundle.
+ */
+export function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const slice = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...slice);
+  }
+  return globalThis.btoa(binary);
+}

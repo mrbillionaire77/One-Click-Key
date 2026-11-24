@@ -1,0 +1,54 @@
+name: Cryptographic Interoperability Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'src/crypto/**'
+      - 'src/schemas/**'
+      - 'scripts/verify-crypto-interop.ts'
+      - '.github/workflows/crypto-interop.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  interop:
+    name: OpenSSL & JDK ${{ matrix.java-version }} Interop
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: ['17', '21']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Setup Temurin JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Print OpenSSL and JDK versions
+        run: |
+          openssl version
+          java -version
+          keytool -version || true
+
+      - name: Verify RSA 2048 & 4096 PKCS#12, strict JKS, and jarsigner interop
+        env:
+          LC_ALL: C.UTF-8
+          JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+        run: npx tsx scripts/verify-crypto-interop.ts

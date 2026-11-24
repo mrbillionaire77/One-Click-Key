@@ -166,8 +166,8 @@ export const docsEn: DocsTranslations = {
       {
         code: '03',
         name: 'Java 17+ PKCS#12 Packaging',
-        sample: 'SHA256withRSA · PBES2 AES-256-CBC',
-        why: 'Signs the X.509v3 certificate, binds friendlyName + localKeyId, and computes SHA-1 and SHA-256 fingerprints directly in RAM.',
+        sample: 'SHA256withRSA · PBES2 PBKDF2-SHA256 (50,000) · AES-256-CBC',
+        why: 'Signs the X.509v3 certificate, encrypts the private key with PBKDF2-HMAC-SHA256 (50,000 iterations, 16-byte CSPRNG salt) + AES-256-CBC, binds friendlyName + localKeyId, and computes SHA-1 and SHA-256 fingerprints in RAM.',
       },
       {
         code: '04',
@@ -213,7 +213,7 @@ export const docsEn: DocsTranslations = {
       {
         name: 'Base64 String (GitHub Actions)',
         sample: 'KEYSTORE_BASE64 -> base64 --decode',
-        why: 'Text representation of your keystore so you can store it safely in GitHub Actions Secrets instead of committing the file.',
+        why: 'Computed lazily on demand only when you click Reveal or Copy, so you can store it safely in GitHub Actions Secrets instead of committing the file.',
       },
     ],
     gradleHeading: 'Sample Gradle signingConfigs',
@@ -221,6 +221,6 @@ export const docsEn: DocsTranslations = {
     keytoolLabel: 'Sample Java 17+ keytool verification command',
     tipHeading: 'Critical mistake to avoid',
     tipBody:
-      'Never commit your .p12 (or converted .jks) file or password to Git (even in private repos). Keep two encrypted backups offline, and click "Wipe Memory & Reset" in Step 4 as soon as you finish downloading.',
+      'Never commit your .p12 (or converted .jks) file or password to Git (even in private repos). Keep two encrypted backups offline, and click "Wipe Memory & Reset" in Step 4 as soon as you finish downloading (it zeroes RAM buffers, offers an opt-in checkbox to clear your active clipboard if you copied a secret, and warns you before leaving if you have not downloaded yet).',
   },
 };

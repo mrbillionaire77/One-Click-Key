@@ -8,7 +8,6 @@ export type GenerationStage =
 
 export interface GeneratedKeystoreArtifact {
   p12Bytes: Uint8Array;
-  base64: string;
   sha1Fingerprint: string;
   sha256Fingerprint: string;
   serialHex: string;
@@ -24,7 +23,7 @@ export type KeystoreWorkerRequest = {
   payload: KeystoreInput;
 };
 
-export type CryptoErrorCode = 'VALIDATION_FAILED' | 'GENERATION_FAILED';
+export type CryptoErrorCode = 'VALIDATION_FAILED' | 'GENERATION_FAILED' | 'TIMEOUT';
 
 export type KeystoreWorkerResponse =
   | {

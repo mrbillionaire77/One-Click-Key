@@ -3,7 +3,7 @@ import { FieldBreakdownList, LessonIntro, PracticalTipBox } from '../components/
 import { useDocsI18n } from '../i18n';
 
 const CSP_POLICY_SAMPLE =
-  "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';";
+  "Content-Security-Policy: default-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';";
 
 export function Lesson3OfflineSecurityPage() {
   const { docs } = useDocsI18n();

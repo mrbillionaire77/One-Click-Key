@@ -1,6 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import fs from 'fs';
 import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -35,16 +34,11 @@ export default defineConfig(() => {
         },
       },
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         // Registered explicitly in src/main.tsx via virtual:pwa-register to keep index.html free of inline scripts
         injectRegister: null,
-        includeAssets: [
-          'favicon.svg',
-          'apple-touch-icon.png',
-          'pwa-192x192.png',
-          'pwa-512x512.png',
-          'pwa-maskable-512x512.png',
-        ],
+        // Icons in public/ are already matched by workbox.globPatterns; disable automatic manifest icon injection to avoid duplicate precache entries on root builds
+        includeManifestIcons: false,
         manifest: {
           id: base,
           name: 'One-Click Key',
@@ -83,29 +77,12 @@ export default defineConfig(() => {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           cleanupOutdatedCaches: true,
-          clientsClaim: true,
-          skipWaiting: true,
         },
         devOptions: {
           enabled: true,
           type: 'module',
         },
       }),
-      {
-        name: 'copy-unbundled-src-assets',
-        apply: 'build' as const,
-        closeBundle(error?: Error): void {
-          if (error) {
-            return;
-          }
-          const distDir = path.resolve(import.meta.dirname, 'dist');
-          const srcAssets = path.resolve(import.meta.dirname, 'src/assets');
-          const distAssets = path.resolve(distDir, 'src/assets');
-          if (fs.existsSync(distDir) && fs.existsSync(srcAssets)) {
-            fs.cpSync(srcAssets, distAssets, { recursive: true, force: true });
-          }
-        },
-      },
     ],
     worker: {
       format: 'es' as const,

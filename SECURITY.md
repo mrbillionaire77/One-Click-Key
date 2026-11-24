@@ -4,11 +4,20 @@
 
 **One-Click Key** is engineered to operate with zero network trust:
 
-- **100% Client-Side Cryptographic Execution**: RSA keypair generation (`2048-bit` or `4096-bit`), X.509v3 certificate signing (`SHA-256 with RSA`), and PKCS#12 serialization execute strictly inside an isolated browser Web Worker.
-- **Zero Outbound Network Requests**: Deployed with a strict Content Security Policy (`connect-src 'none'`) in both `index.html` (`<meta http-equiv="Content-Security-Policy">`) and `public/_headers` (HTTP response headers on Cloudflare Pages) so application scripts cannot initiate `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, or `sendBeacon` requests.
-- **Zero External CDNs**: All dependencies (including `node-forge` and typography) are bundled locally through `npm` and precached by the offline Service Worker.
+- **100% Client-Side Cryptographic Execution**: RSA keypair generation (`2048-bit` or `4096-bit`), X.509v3 certificate signing (`SHA-256 with RSA`), and PKCS#12 serialization execute strictly inside an isolated browser Web Worker that is terminated immediately upon completion, error, cancellation, or timeout.
+- **Hardened PKCS#12 Encryption (`v1.1.0+`)**: Private keys are encrypted inside PKCS#8 `ShroudedKeyBag` using **PBES2**, **PBKDF2-HMAC-SHA256** (`50,000` iterations, `16`-byte CSPRNG salt), and **AES-256-CBC**.
+  - *Transparent Library Boundaries (`node-forge@1.4.4`):* `node-forge` hardcodes the outer PKCS#12 integrity MAC (`MacData`) digest to `HMAC-SHA1` (hardened with the same `50,000` iterations and `16`-byte salt) and stores the public X.509 certificate in an unencrypted `PKCS#7 Data` bag (certificates are public metadata embedded in every signed Android APK/AAB).
+- **Zero Outbound Network Requests & Strict CSP**: Deployed with `Content-Security-Policy` enforcing `default-src 'self'`, `script-src 'self'`, `worker-src 'self'`, `manifest-src 'self'`, and `connect-src 'none'` in both `index.html` (`<meta http-equiv="Content-Security-Policy">`) and `public/_headers` (HTTP response headers on Cloudflare Pages). `style-src 'self' 'unsafe-inline'` is retained solely for runtime transform styles written by `motion/react`.
+- **Zero External CDNs**: All dependencies (including `node-forge` and typography) are bundled locally through `npm` and precached by the offline Service Worker (`registerType: 'prompt'` so updates never silently reload an active session).
 - **Zero Persistent Secret Storage**: Passwords, private keys, and generated binary artifacts are never written to `localStorage`, `sessionStorage`, IndexedDB, cookies, or `console.log`.
-- **Explicit Memory Wipe**: Step 4 provides a **Wipe Memory & Reset** control that zeroes the generated `Uint8Array` buffer (`fill(0)`), clears volatile React state, and terminates the dedicated cryptographic Web Worker.
+- **Secret Lifecycle & Browser Memory Boundaries**:
+  - Plaintext `form.password` is cleared from React state immediately upon entering Step 4.
+  - Base64 export is computed lazily on demand only when explicitly revealed or copied.
+  - Leaving the page or navigating to `#/docs` while a generated keystore has not yet been downloaded triggers a `beforeunload` / inline leave-guard confirmation.
+  - Clicking **Wipe Memory & Reset** (or confirming **Wipe & Leave**) zeroes the generated `Uint8Array` buffer (`fill(0)`), clears volatile React state, and terminates any active worker.
+  - **Opt-In Active Clipboard Clear**: If a secret (password or Base64) was copied during the session, Step 4 offers an unchecked-by-default **"Also clear active clipboard"** checkbox. Only when explicitly checked and clicked inside **Wipe Memory & Reset** does the app call `navigator.clipboard.writeText('')` synchronously (never `readText()`, never in the background, and never on **Wipe & Leave**).
+  - *Inherent JavaScript / OS Limitations:* JavaScript strings (e.g., DOM input values, revealed Base64 text) are immutable and garbage-collected asynchronously by the browser engine, and web applications cannot erase OS-level clipboard history managers or process swap memory.
+- **Automated Cryptographic Interoperability Verification**: A separate CI workflow (`.github/workflows/crypto-interop.yml`) runs `scripts/verify-crypto-interop.ts` on OpenSSL and Temurin OpenJDK `17` & `21` to verify both RSA `2048` and `4096` `.p12` outputs, hardened KDF parameters, `keytool -importkeystore` JKS conversion (`0xFEEDFEED`), strict `keystore.type.compat=false` validation, certificate/public-key parity, and `jarsigner` signing/verification.
 
 ## Verifying Zero-Network Execution
 

@@ -3,7 +3,33 @@ import { formatSubjectSummary } from './formatters';
 import type { GeneratedKeystoreArtifact, GenerationStage } from './worker-types';
 import { computeExpiryDate, keystoreInputSchema, type KeystoreInput } from '@/schemas/keystore.schema';
 
-export { buildGradleSnippet, buildKeytoolVerifyCommand, formatSubjectSummary } from './formatters';
+export {
+  buildGradleSnippet,
+  buildKeytoolVerifyCommand,
+  formatSubjectSummary,
+  uint8ArrayToBase64,
+} from './formatters';
+
+/**
+ * Hardened PKCS#12 PBES2 / PBKDF2 parameters supported natively by node-forge@1.4.4,
+ * OpenSSL 3.x, OpenJDK 17/21, Android Gradle Plugin, and apksigner.
+ * Note: node-forge@1.4.4 hardcodes PFX MacData digest to HMAC-SHA1 (using the same
+ * `count` and `saltSize`) and stores public X.509 CertBags as unencrypted PKCS#7 Data.
+ */
+export const PKCS12_PBKDF2_ITERATIONS = 50_000;
+export const PKCS12_SALT_SIZE_BYTES = 16;
+export const PKCS12_PRF_ALGORITHM = 'sha256' as const;
+
+type ForgePkcs12BaseOptions = NonNullable<Parameters<typeof forge.pkcs12.toPkcs12Asn1>[3]>;
+
+/**
+ * Runtime node-forge (`lib/pkcs12.js:974`) forwards `options` directly to
+ * `pki.encryptPrivateKeyInfo` (`lib/pbe.js:225`), which supports `prfAlgorithm`,
+ * even though `@types/node-forge` omits that property on `toPkcs12Asn1`.
+ */
+interface HardenedPkcs12Options extends ForgePkcs12BaseOptions {
+  prfAlgorithm?: 'sha1' | 'sha224' | 'sha256' | 'sha384' | 'sha512';
+}
 
 /**
  * Generates a cryptographically secure, strictly positive 128-bit X.509 serial number
@@ -45,19 +71,6 @@ export function binaryStringToUint8Array(binary: string): Uint8Array {
     bytes[i] = binary.charCodeAt(i) & 0xff;
   }
   return bytes;
-}
-
-/**
- * Encodes a Uint8Array into standard Base64 without stack overflow on large buffers.
- */
-export function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const slice = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode(...slice);
-  }
-  return forge.util.encode64(binary);
 }
 
 // @types/node-forge declares CertificateField.valueTagClass as `forge.asn1.Class`,
@@ -181,21 +194,28 @@ export function generateKeystoreSync(
   const sha1Hex = forge.md.sha1.create().update(certDerBytes).digest().toHex();
   const sha256Hex = forge.md.sha256.create().update(certDerBytes).digest().toHex();
 
-  // Package into Java 17+ & apksigner compatible PKCS#12 container
-  const p12Asn1 = forge.pkcs12.toPkcs12Asn1(keypair.privateKey, [cert], input.password, {
+  // Package into hardened Java 17+ & apksigner compatible PKCS#12 container
+  const pkcs12Options: HardenedPkcs12Options = {
     algorithm: 'aes256',
+    prfAlgorithm: PKCS12_PRF_ALGORITHM,
+    saltSize: PKCS12_SALT_SIZE_BYTES,
+    count: PKCS12_PBKDF2_ITERATIONS,
     friendlyName: input.alias,
     generateLocalKeyId: true,
     useMac: true,
-  });
+  };
+  const p12Asn1 = forge.pkcs12.toPkcs12Asn1(
+    keypair.privateKey,
+    [cert],
+    input.password,
+    pkcs12Options as ForgePkcs12BaseOptions,
+  );
 
   const p12DerBinary = forge.asn1.toDer(p12Asn1).getBytes();
   const p12Bytes = binaryStringToUint8Array(p12DerBinary);
-  const base64 = uint8ArrayToBase64(p12Bytes);
 
   return {
     p12Bytes,
-    base64,
     sha1Fingerprint: formatFingerprint(sha1Hex),
     sha256Fingerprint: formatFingerprint(sha256Hex),
     serialHex: cert.serialNumber.toUpperCase(),

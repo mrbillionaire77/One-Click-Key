@@ -247,7 +247,7 @@ export function Step3ReviewGenerate({
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <div className="space-y-1">
             <p className="font-semibold">{t.step3.errorHeading}</p>
-            <p dir="ltr" className="font-mono break-words">
+            <p dir="auto" className="break-words leading-relaxed">
               {error}
             </p>
           </div>

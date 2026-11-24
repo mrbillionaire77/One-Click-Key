@@ -13,10 +13,11 @@ import { extractFieldErrors, type FieldErrorMap, type WizardFormState } from './
 interface Step1Props {
   form: WizardFormState;
   onChange: (patch: Partial<WizardFormState>) => void;
+  onSecretCopied?: () => void;
   onNext: () => void;
 }
 
-export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
+export function Step1KeySecurity({ form, onChange, onSecretCopied, onNext }: Step1Props) {
   const { t, dir } = useI18n();
   const [showPassword, setShowPassword] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
@@ -68,6 +69,7 @@ export function Step1KeySecurity({ form, onChange, onNext }: Step1Props) {
     if (!form.password) return;
     try {
       await navigator.clipboard.writeText(form.password);
+      onSecretCopied?.();
       setCopiedPassword(true);
       window.setTimeout(() => setCopiedPassword(false), 2000);
     } catch {

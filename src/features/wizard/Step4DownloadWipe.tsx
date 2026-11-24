@@ -9,12 +9,13 @@ import {
   Terminal,
   Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   buildGradleSnippet,
   buildKeytoolConvertToJksCommand,
   buildKeytoolVerifyCommand,
+  uint8ArrayToBase64,
 } from '@/crypto/formatters';
 import type { GeneratedKeystoreArtifact } from '@/crypto/worker-types';
 import { useI18n } from '@/i18n';
@@ -23,17 +24,37 @@ import { cn } from '@/lib/utils';
 
 interface Step4Props {
   artifact: GeneratedKeystoreArtifact;
+  secretCopiedInSession: boolean;
+  onDownloaded: () => void;
+  onSecretCopied: () => void;
   onWipe: () => void;
 }
 
 type CopyKey = 'sha1' | 'sha256' | 'serial' | 'base64' | 'gradle' | 'keytool' | 'jksConvert';
 
-export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
+export function Step4DownloadWipe({
+  artifact,
+  secretCopiedInSession,
+  onDownloaded,
+  onSecretCopied,
+  onWipe,
+}: Step4Props) {
   const { t, locale } = useI18n();
   const [copiedKey, setCopiedKey] = useState<CopyKey | null>(null);
   const [gradleDsl, setGradleDsl] = useState<'kotlin' | 'groovy'>('kotlin');
-  const [revealBase64, setRevealBase64] = useState(false);
+  const [revealedBase64, setRevealedBase64] = useState<string | null>(null);
   const [showJksConvert, setShowJksConvert] = useState(false);
+  const [clearActiveClipboard, setClearActiveClipboard] = useState(false);
+  const copyTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const safeBaseFilename = `${artifact.alias.replace(/[^a-zA-Z0-9._-]/g, '_')}-keystore`;
   const p12Filename = `${safeBaseFilename}.p12`;
@@ -58,15 +79,23 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    onDownloaded();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const copyText = async (key: CopyKey, text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      if (key === 'base64') {
+        onSecretCopied();
+      }
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
       setCopiedKey(key);
-      window.setTimeout(() => {
+      copyTimerRef.current = window.setTimeout(() => {
         setCopiedKey((current) => (current === key ? null : current));
+        copyTimerRef.current = null;
       }, 2000);
     } catch {
       // Clipboard blocked by browser permissions
@@ -384,9 +413,13 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => setRevealBase64((prev) => !prev)}
+              onClick={() =>
+                setRevealedBase64((prev) =>
+                  prev === null ? uint8ArrayToBase64(artifact.p12Bytes) : null,
+                )
+              }
             >
-              {revealBase64 ? (
+              {revealedBase64 !== null ? (
                 <>
                   <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>{t.step4.hideBtn}</span>
@@ -404,7 +437,7 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
               variant="outline"
               size="sm"
               onClick={() => {
-                void copyText('base64', artifact.base64);
+                void copyText('base64', revealedBase64 ?? uint8ArrayToBase64(artifact.p12Bytes));
               }}
             >
               {copiedKey === 'base64' ? (
@@ -422,12 +455,12 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
           </div>
         </div>
 
-        {revealBase64 && (
+        {revealedBase64 !== null && (
           <pre
             dir="ltr"
             className="max-h-36 max-w-full overflow-auto break-all whitespace-pre-wrap rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5 font-mono text-xs text-[var(--foreground)] [unicode-bidi:isolate]"
           >
-            <code>{artifact.base64}</code>
+            <code>{revealedBase64}</code>
           </pre>
         )}
         <p className="text-xs text-[var(--muted-foreground)]">{t.step4.base64Hint}</p>
@@ -435,18 +468,58 @@ export function Step4DownloadWipe({ artifact, onWipe }: Step4Props) {
 
       {/* Wipe Memory & Reset */}
       <section className="flex flex-col gap-4 rounded-xl border border-[var(--destructive)]/30 bg-[var(--destructive-subtle)]/50 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">{t.step4.wipeHeading}</h2>
-          <p className="max-w-xl text-xs leading-relaxed text-[var(--muted-foreground)]">
-            {t.step4.wipeBody}
-          </p>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">{t.step4.wipeHeading}</h2>
+            <p className="max-w-xl text-xs leading-relaxed text-[var(--muted-foreground)]">
+              {t.step4.wipeBody}
+            </p>
+          </div>
+
+          {secretCopiedInSession && (
+            <div className="space-y-1 pt-1">
+              <label
+                htmlFor="wipe-clear-clipboard"
+                className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--foreground)] select-none"
+              >
+                <input
+                  id="wipe-clear-clipboard"
+                  type="checkbox"
+                  checked={clearActiveClipboard}
+                  onChange={(event) => setClearActiveClipboard(event.target.checked)}
+                  className="h-4 w-4 shrink-0 rounded border border-[var(--border-strong)] accent-[var(--destructive)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] cursor-pointer"
+                />
+                <span>{t.step4.wipeClipboardLabel}</span>
+              </label>
+              <p className="max-w-xl text-xs leading-relaxed text-[var(--muted-foreground)]">
+                {t.step4.wipeClipboardNote}
+              </p>
+            </div>
+          )}
         </div>
 
         <Button
           type="button"
           variant="destructive"
           size="lg"
-          onClick={onWipe}
+          onClick={() => {
+            if (
+              secretCopiedInSession &&
+              clearActiveClipboard &&
+              typeof navigator !== 'undefined' &&
+              navigator.clipboard?.writeText
+            ) {
+              try {
+                void navigator.clipboard.writeText('').catch(() => {
+                  // Silently ignore if blocked by browser clipboard policy
+                });
+              } catch {
+                // Silently ignore synchronous clipboard policy errors
+              }
+            }
+            setRevealedBase64(null);
+            onWipe();
+          }}
           className="shrink-0"
         >
           <Trash2 className="h-4 w-4" aria-hidden="true" />

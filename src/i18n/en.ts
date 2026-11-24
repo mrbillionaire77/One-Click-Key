@@ -148,6 +148,8 @@ export const en: Translations = {
       'packaging-pkcs12': 'Assembling Java 17+ PKCS#12 keystore & fingerprints…',
     },
     errorHeading: 'Generation could not complete',
+    timeoutError:
+      'Key generation timed out after 120 seconds. Try RSA 2048-bit or close other heavy browser tabs.',
   },
   step4: {
     successNotice:
@@ -192,8 +194,20 @@ export const en: Translations = {
     wipeHeading: 'Clear Sensitive Memory',
     wipeBody:
       'Overwrites the generated keystore byte buffer with zeros, clears all form values from React state, and terminates the worker.',
+    wipeClipboardLabel: 'Also clear active clipboard',
+    wipeClipboardNote:
+      'Opt-in: clears only your active clipboard entry when checked above (OS clipboard history managers cannot be cleared by browsers).',
     wipeBtn: 'Wipe Memory & Reset',
     wipedToast: 'Memory wiped. All passwords and keystore buffers have been cleared.',
+    leaveGuardMessage:
+      'You have an active keystore in memory that has not been downloaded yet. Leaving this view will wipe it immediately.',
+    leaveGuardStay: 'Stay on Download',
+    leaveGuardLeave: 'Wipe & Leave',
+  },
+  pwaUpdate: {
+    message: 'A new offline version of One-Click Key is ready.',
+    reloadBtn: 'Reload to update',
+    dismissBtn: 'Dismiss update notice',
   },
   validation: {
     aliasRequired: 'Key alias is required.',

@@ -131,6 +131,7 @@ export interface Translations {
     backBtn: string;
     stages: Record<GenerationStage, string>;
     errorHeading: string;
+    timeoutError: string;
   };
   step4: {
     successNotice: string;
@@ -164,8 +165,18 @@ export interface Translations {
     hideBtn: string;
     wipeHeading: string;
     wipeBody: string;
+    wipeClipboardLabel: string;
+    wipeClipboardNote: string;
     wipeBtn: string;
     wipedToast: string;
+    leaveGuardMessage: string;
+    leaveGuardStay: string;
+    leaveGuardLeave: string;
+  };
+  pwaUpdate: {
+    message: string;
+    reloadBtn: string;
+    dismissBtn: string;
   };
   validation: Record<ValidationErrorKey, string>;
   footer: {

@@ -4,13 +4,19 @@ import {
   buildGradleSnippet,
   buildKeytoolConvertToJksCommand,
   buildKeytoolVerifyCommand,
+  uint8ArrayToBase64,
 } from '@/crypto/formatters';
 import {
   evaluatePasswordStrength,
   generateSafePassword,
   PASSWORD_CHARSET,
 } from '@/crypto/password';
-import { generateKeystoreSync, generatePositiveSerialHex } from '@/crypto/pkcs12';
+import {
+  generateKeystoreSync,
+  generatePositiveSerialHex,
+  PKCS12_PBKDF2_ITERATIONS,
+  PKCS12_SALT_SIZE_BYTES,
+} from '@/crypto/pkcs12';
 import { ar } from '@/i18n/ar';
 import { en } from '@/i18n/en';
 import { formatCertificateDate } from '@/lib/formatDate';
@@ -203,14 +209,20 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
 
     const artifact = generateKeystoreSync(input);
 
-    // 1. Validate artifact shape, Base64 consistency, and ASN.1 DER PKCS#12 header (not JKS 0xFEEDFEED)
+    // 1. Validate artifact shape, lazy Base64 round-trip, and ASN.1 DER PKCS#12 header (not JKS 0xFEEDFEED)
     expect(artifact.p12Bytes.byteLength).toBeGreaterThan(1000);
     expect(artifact.p12Bytes[0]).toBe(0x30);
     const firstFourHex = Array.from(artifact.p12Bytes.subarray(0, 4), (b) =>
       b.toString(16).padStart(2, '0'),
     ).join('');
     expect(firstFourHex).not.toBe('feedfeed');
-    expect(artifact.base64.length).toBeGreaterThan(1000);
+
+    const lazyBase64 = uint8ArrayToBase64(artifact.p12Bytes);
+    expect(lazyBase64.length).toBeGreaterThan(1000);
+    const decodedBinary = globalThis.atob(lazyBase64);
+    expect(decodedBinary.length).toBe(artifact.p12Bytes.byteLength);
+    expect(decodedBinary.charCodeAt(0)).toBe(0x30);
+
     expect(artifact.sha1Fingerprint).toMatch(/^([0-9A-F]{2}:){19}[0-9A-F]{2}$/);
     expect(artifact.sha256Fingerprint).toMatch(/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/);
     expect(new Date(artifact.notAfterIso).getTime()).toBeGreaterThan(
@@ -223,6 +235,21 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
     expect(() =>
       forge.pkcs12.pkcs12FromAsn1(p12Asn1, true, `${input.password}-wrong`),
     ).toThrow();
+
+    // 2b. Verify hardened PKCS#12 ASN.1 parameters (MAC salt=16B, MAC iterations=50,000, PBKDF2 PRF=hmacWithSHA256)
+    const pfxSequence = p12Asn1.value as forge.asn1.Asn1[];
+    const macData = pfxSequence[2]?.value as forge.asn1.Asn1[] | undefined;
+    expect(macData).toBeDefined();
+    const macSaltBytes = String(macData?.[1]?.value ?? '');
+    const macIterHex = forge.util.bytesToHex(String(macData?.[2]?.value ?? ''));
+    expect(macSaltBytes.length).toBe(PKCS12_SALT_SIZE_BYTES);
+    expect(Number.parseInt(macIterHex, 16)).toBe(PKCS12_PBKDF2_ITERATIONS);
+
+    // Verify PBKDF2-HMAC-SHA256 OID (1.2.840.113549.2.9) is present in the EncryptedPrivateKeyInfo
+    const hmacWithSha256Oid = forge.pki.oids.hmacWithSHA256 ?? '1.2.840.113549.2.9';
+    const hmacWithSha256Der = forge.asn1.oidToDer(hmacWithSha256Oid).getBytes();
+    expect(binaryStr.includes(hmacWithSha256Der)).toBe(true);
+
     const parsedP12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, true, input.password);
 
     const keyBagOid = forge.pki.oids.pkcs8ShroudedKeyBag ?? '1.2.840.113549.1.12.10.1.2';
@@ -277,6 +304,44 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
     const signature = recoveredPrivateKey!.sign(payloadMd);
     expect(recoveredPublicKey!.verify(payloadMd.digest().bytes(), signature)).toBe(true);
   }, 20000);
+
+  it('generates and verifies an RSA 4096-bit hardened PKCS#12 keystore', () => {
+    const input = keystoreInputSchema.parse({
+      alias: 'PlayRoot4096',
+      keySize: 4096,
+      password: generateSafePassword(24),
+      commonName: 'One-Click RSA 4096',
+      organizationalUnit: '',
+      organization: 'One-Click Key QA',
+      locality: '',
+      state: '',
+      country: 'US',
+      validityYears: 30,
+    });
+
+    const artifact = generateKeystoreSync(input);
+    expect(artifact.keySize).toBe(4096);
+    expect(artifact.p12Bytes[0]).toBe(0x30);
+
+    const binaryStr = Array.from(artifact.p12Bytes, (b) => String.fromCharCode(b)).join('');
+    const parsedP12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(binaryStr), true, input.password);
+    const keyBagOid = forge.pki.oids.pkcs8ShroudedKeyBag ?? '1.2.840.113549.1.12.10.1.2';
+    const certBagOid = forge.pki.oids.certBag ?? '1.2.840.113549.1.12.10.1.3';
+
+    const recoveredPrivateKey = parsedP12.getBags({ bagType: keyBagOid })[keyBagOid]?.[0]
+      ?.key as forge.pki.rsa.PrivateKey | undefined;
+    const recoveredCert = parsedP12.getBags({ bagType: certBagOid })[certBagOid]?.[0]?.cert;
+    const recoveredPublicKey = recoveredCert?.publicKey as forge.pki.rsa.PublicKey | undefined;
+
+    expect(recoveredPrivateKey).toBeDefined();
+    expect(recoveredPublicKey).toBeDefined();
+    expect(recoveredPublicKey!.n.bitLength()).toBe(4096);
+    expect(recoveredCert?.verify(recoveredCert)).toBe(true);
+
+    const md = forge.md.sha256.create().update('rsa-4096-sign-verify-check');
+    const sig = recoveredPrivateKey!.sign(md);
+    expect(recoveredPublicKey!.verify(md.digest().bytes(), sig)).toBe(true);
+  }, 30000);
 
   it('builds Kotlin DSL, Groovy DSL, keytool verify, and local JKS conversion snippets cleanly', () => {
     const kts = buildGradleSnippet('upload-key', 'kotlin', 'upload-key-keystore.p12');
