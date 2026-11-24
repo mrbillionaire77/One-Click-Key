@@ -49,7 +49,7 @@ export const en: Translations = {
     progressHeading: 'Workflow',
     specHeading: 'Cryptographic Profile',
     formatLabel: 'Container',
-    formatValue: 'PKCS#12 (.jks / .p12)',
+    formatValue: 'PKCS#12 (.p12)',
     signatureLabel: 'Signature',
     signatureValue: 'SHA-256 with RSA',
     encryptionLabel: 'Cipher',
@@ -153,10 +153,23 @@ export const en: Translations = {
     successNotice:
       'Generated locally in memory with a CSPRNG positive serial number and UTF-8 X.509 encoding.',
     downloadHeading: 'Download Keystore File',
-    downloadJks: 'Download .jks (Recommended)',
-    downloadP12: 'Download .p12 (PKCS#12)',
+    downloadP12: 'Download Keystore (.p12 · PKCS#12)',
     downloadHint:
-      'Both files contain identical Java 17+ PKCS#12 data. Use .jks for standard Android Studio conventions or .p12 for explicit PKCS#12 naming.',
+      'Exports a genuine RFC 7292 PKCS#12 (.p12) keystore — the official default format for Java 9+, Android Studio, Android Gradle Plugin, and Google Play upload keys.',
+    jksConvertToggle: 'Need legacy JKS (.jks) format? Convert locally with JDK keytool',
+    jksConvertIntro:
+      'PKCS#12 (.p12) works directly with modern Android Studio and Gradle. Only convert to legacy JKS if an older tool strictly requires binary JKS format. Run this command locally after downloading:',
+    jksConvertSourcePassNote:
+      'Source store password: When prompted for the source keystore password, enter the password you created in Step 1 for the .p12 file.',
+    jksConvertDestPassNote:
+      'Destination store password: Enter the same password when prompted for the destination JKS keystore password to keep storePassword and keyPassword identical.',
+    jksConvertKeyPassNote:
+      'Destination key password: keytool -importkeystore does not prompt for -destkeypass when creating JKS — it automatically protects the JKS private key with the source .p12 password. If you choose a different JKS store password, set ANDROID_KEY_PASSWORD to the original .p12 password (or pass -destkeypass / run keytool -keypasswd).',
+    jksConvertAliasNote:
+      'Alias lowercasing: Standard JKS automatically lowercases key aliases (Locale.ENGLISH). Use the lowercased alias in Gradle after conversion.',
+    jksConvertAliasLowercasePrefix: 'Converted JKS keyAlias:',
+    jksConvertGradleNote:
+      'Gradle after conversion: Point storeFile to the .jks filename, change storeType to "JKS", use the lowercased keyAlias, and set ANDROID_KEY_PASSWORD if your JKS store password differs from the original .p12 password.',
     fingerprintsHeading: 'Certificate Fingerprints & Metadata',
     sha1Label: 'SHA-1 Fingerprint',
     sha256Label: 'SHA-256 Fingerprint',

@@ -135,9 +135,16 @@ export interface Translations {
   step4: {
     successNotice: string;
     downloadHeading: string;
-    downloadJks: string;
     downloadP12: string;
     downloadHint: string;
+    jksConvertToggle: string;
+    jksConvertIntro: string;
+    jksConvertSourcePassNote: string;
+    jksConvertDestPassNote: string;
+    jksConvertKeyPassNote: string;
+    jksConvertAliasNote: string;
+    jksConvertAliasLowercasePrefix: string;
+    jksConvertGradleNote: string;
     fingerprintsHeading: string;
     sha1Label: string;
     sha256Label: string;

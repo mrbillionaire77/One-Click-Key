@@ -1,12 +1,12 @@
 import forge from 'node-forge';
 import { describe, expect, it } from 'vitest';
-import { evaluatePasswordStrength, generateSafePassword } from '@/crypto/password';
 import {
   buildGradleSnippet,
+  buildKeytoolConvertToJksCommand,
   buildKeytoolVerifyCommand,
-  generateKeystoreSync,
-  generatePositiveSerialHex,
-} from '@/crypto/pkcs12';
+} from '@/crypto/formatters';
+import { evaluatePasswordStrength, generateSafePassword } from '@/crypto/password';
+import { generateKeystoreSync, generatePositiveSerialHex } from '@/crypto/pkcs12';
 import { ar } from '@/i18n/ar';
 import { en } from '@/i18n/en';
 import { formatCertificateDate } from '@/lib/formatDate';
@@ -154,8 +154,13 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
 
     const artifact = generateKeystoreSync(input);
 
-    // 1. Validate artifact shape and Base64 consistency
+    // 1. Validate artifact shape, Base64 consistency, and ASN.1 DER PKCS#12 header (not JKS 0xFEEDFEED)
     expect(artifact.p12Bytes.byteLength).toBeGreaterThan(1000);
+    expect(artifact.p12Bytes[0]).toBe(0x30);
+    const firstFourHex = Array.from(artifact.p12Bytes.subarray(0, 4), (b) =>
+      b.toString(16).padStart(2, '0'),
+    ).join('');
+    expect(firstFourHex).not.toBe('feedfeed');
     expect(artifact.base64.length).toBeGreaterThan(1000);
     expect(artifact.sha1Fingerprint).toMatch(/^([0-9A-F]{2}:){19}[0-9A-F]{2}$/);
     expect(artifact.sha256Fingerprint).toMatch(/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/);
@@ -163,9 +168,12 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
       GOOGLE_PLAY_MIN_EXPIRY.getTime(),
     );
 
-    // 2. Round-trip parse the PKCS#12 binary using node-forge ASN.1 decoder
+    // 2. Round-trip parse the PKCS#12 binary using node-forge ASN.1 decoder & verify wrong password rejection
     const binaryStr = Array.from(artifact.p12Bytes, (b) => String.fromCharCode(b)).join('');
     const p12Asn1 = forge.asn1.fromDer(binaryStr);
+    expect(() =>
+      forge.pkcs12.pkcs12FromAsn1(p12Asn1, true, `${input.password}-wrong`),
+    ).toThrow();
     const parsedP12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, true, input.password);
 
     const keyBagOid = forge.pki.oids.pkcs8ShroudedKeyBag ?? '1.2.840.113549.1.12.10.1.2';
@@ -210,22 +218,55 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
     expect(cField?.valueTagClass).toBe(forge.asn1.Type.PRINTABLESTRING);
     expect(cField?.value).toBe('SA');
 
-    // 6. Verify self-signature cryptographically
+    // 6. Verify self-signature and private-key / public-key correspondence via sign + verify
     expect(cert?.verify(cert)).toBe(true);
+    const recoveredPrivateKey = keyBag?.key as forge.pki.rsa.PrivateKey | undefined;
+    const recoveredPublicKey = cert?.publicKey as forge.pki.rsa.PublicKey | undefined;
+    expect(recoveredPrivateKey).toBeDefined();
+    expect(recoveredPublicKey).toBeDefined();
+    const payloadMd = forge.md.sha256.create().update('one-click-key-sign-verify-check');
+    const signature = recoveredPrivateKey!.sign(payloadMd);
+    expect(recoveredPublicKey!.verify(payloadMd.digest().bytes(), signature)).toBe(true);
   }, 20000);
 
-  it('builds Kotlin DSL, Groovy DSL, and Java 17 keytool verification snippets cleanly', () => {
-    const kts = buildGradleSnippet('upload-key', 'kotlin', 'upload-key-keystore.jks');
-    const groovy = buildGradleSnippet('upload-key', 'groovy', 'upload-key-keystore.jks');
-    const cmd = buildKeytoolVerifyCommand('upload-key', 'upload-key-keystore.jks');
+  it('builds Kotlin DSL, Groovy DSL, keytool verify, and local JKS conversion snippets cleanly', () => {
+    const kts = buildGradleSnippet('upload-key', 'kotlin', 'upload-key-keystore.p12');
+    const groovy = buildGradleSnippet('upload-key', 'groovy', 'upload-key-keystore.p12');
+    const defaultKts = buildGradleSnippet('upload-key', 'kotlin');
+    const verifyCmd = buildKeytoolVerifyCommand('upload-key', 'upload-key-keystore.p12');
+    const defaultVerifyCmd = buildKeytoolVerifyCommand('upload-key');
+    const convertCmd = buildKeytoolConvertToJksCommand(
+      'upload-key-keystore.p12',
+      'upload-key-keystore.jks',
+    );
 
     expect(kts).toContain('create("release")');
+    expect(kts).toContain('storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "upload-key-keystore.p12")');
+    expect(kts).toContain('storeType = "PKCS12"');
     expect(kts).toContain('keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "upload-key"');
-    expect(groovy).toContain('signingConfigs {');
-    expect(groovy).toContain('keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "upload-key"');
-    expect(cmd).toBe(
-      'keytool -list -v -keystore upload-key-keystore.jks -storetype PKCS12 -alias upload-key',
+    expect(kts).toContain(
+      'keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""',
     );
+    expect(defaultKts).toContain('"release-keystore.p12"');
+
+    expect(groovy).toContain('signingConfigs {');
+    expect(groovy).toContain('storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "upload-key-keystore.p12")');
+    expect(groovy).toContain('storeType "PKCS12"');
+    expect(groovy).toContain('keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "upload-key"');
+    expect(groovy).toContain(
+      'keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""',
+    );
+
+    expect(verifyCmd).toBe(
+      'keytool -list -v -keystore upload-key-keystore.p12 -storetype PKCS12 -alias upload-key',
+    );
+    expect(defaultVerifyCmd).toBe(
+      'keytool -list -v -keystore release-keystore.p12 -storetype PKCS12 -alias upload-key',
+    );
+    expect(convertCmd).toBe(
+      'keytool -importkeystore -srckeystore upload-key-keystore.p12 -srcstoretype PKCS12 -destkeystore upload-key-keystore.jks -deststoretype JKS',
+    );
+    expect(convertCmd).not.toContain('pass');
   });
 });
 

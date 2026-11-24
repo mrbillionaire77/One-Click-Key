@@ -50,7 +50,7 @@ export const docsEn: DocsTranslations = {
       {
         num: '4',
         title: 'Download & Use Your Keystore',
-        summary: 'Save .jks or .p12 safely, add SHA fingerprints, configure Gradle, and verify.',
+        summary: 'Save .p12 safely (or convert locally to legacy .jks), add SHA fingerprints, configure Gradle, and verify.',
       },
     ],
   },
@@ -195,9 +195,9 @@ export const docsEn: DocsTranslations = {
     breakdownHeading: 'Outputs explained',
     fields: [
       {
-        name: 'Keystore File (.jks or .p12)',
-        sample: 'demo-upload-key-keystore.jks',
-        why: 'Both buttons download the exact same Java 17+ PKCS#12 container. Pick .jks for standard Android Studio projects.',
+        name: 'Keystore File (.p12 · PKCS#12)',
+        sample: 'demo-upload-key-keystore.p12',
+        why: 'Downloads a genuine RFC 7292 PKCS#12 container supported natively by Java 9+, Android Studio, and Gradle. If an older tool strictly requires legacy JKS, convert locally with JDK keytool -importkeystore.',
       },
       {
         name: 'SHA-1 Fingerprint',
@@ -221,6 +221,6 @@ export const docsEn: DocsTranslations = {
     keytoolLabel: 'Sample Java 17+ keytool verification command',
     tipHeading: 'Critical mistake to avoid',
     tipBody:
-      'Never commit your .jks or .p12 file or password to Git (even in private repos). Keep two encrypted backups offline, and click "Wipe Memory & Reset" in Step 4 as soon as you finish downloading.',
+      'Never commit your .p12 (or converted .jks) file or password to Git (even in private repos). Keep two encrypted backups offline, and click "Wipe Memory & Reset" in Step 4 as soon as you finish downloading.',
   },
 };

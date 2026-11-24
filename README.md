@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>100% Client-Side · Offline-First · Open-Source Android Keystore Generator</strong><br />
-  Generate official Google Play App Signing & Android Gradle Plugin compatible <code>.jks</code> / <code>.p12</code> keystores directly in your browser with zero network calls.
+  Generate official Google Play App Signing & Android Gradle Plugin compatible <code>PKCS#12 (.p12)</code> keystores directly in your browser with zero network calls.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 ## Why One-Click Key?
 
-- **Google Play & Java 17+ Compliant**: Produces standards-compliant **PKCS#12** containers (exportable as `.jks` or `.p12`) using **RSA 2048-bit** or **RSA 4096-bit**, **SHA-256 with RSA**, **PBES2 + AES-256-CBC** encryption, `localKeyId` private-key binding, strictly positive CSPRNG X.509 serial numbers, UTF-8 Distinguished Names, and default **30-year** validity (guaranteed past October 22, 2033).
+- **Google Play & Java 17+ Compliant**: Produces genuine **RFC 7292 PKCS#12 (`.p12`)** containers (with copy-ready local `keytool -importkeystore` instructions for legacy JKS consumers) using **RSA 2048-bit** or **RSA 4096-bit**, **SHA-256 with RSA**, **PBES2 + AES-256-CBC** private-key encryption, `localKeyId` private-key binding, strictly positive CSPRNG X.509 serial numbers, UTF-8 Distinguished Names, and default **30-year** validity (guaranteed past October 22, 2033).
 - **Zero-Network Architecture**: Enforces `Content-Security-Policy: ... connect-src 'none'` directly via `<meta http-equiv="Content-Security-Policy">` in `index.html` (for GitHub Pages and static hosts) and via HTTP response headers in `public/_headers` (for Cloudflare Pages). No external CDNs, no Google Fonts requests, no analytics, and no server communication.
 - **Dedicated Web Worker Execution**: Heavy RSA keypair generation runs off the main thread so the interface remains responsive even at 4096-bit key sizes.
 - **Instant Memory Wipe**: Zeroes generated `Uint8Array` buffers, clears React state, and terminates the cryptographic worker in one click.
@@ -44,7 +44,7 @@ You do not need to trust this app — verify it directly in your browser:
 5. Run through all 4 steps to generate and download your keystore — confirm **0 outbound network requests** appear in the Network log.
 6. Verify your downloaded keystore locally with Java 17+ `keytool`:
    ```bash
-   keytool -list -v -keystore release-keystore.jks -storetype PKCS12
+   keytool -list -v -keystore release-keystore.p12 -storetype PKCS12
    ```
 
 ## Project Structure
@@ -102,7 +102,7 @@ See **[DEPLOY.md](./DEPLOY.md)** for full step-by-step instructions for GitHub P
 
 ## النسخة العربية — One-Click Key
 
-**One-Click Key** هو تطبيق ويب مفتوح المصدر يعمل بالكامل داخل متصفحك (100% Client-Side) ويدعم العمل دون اتصال بالإنترنت (Offline-First PWA) لإنشاء ملفات مفاتيح أندرويد الرسمية (`.jks` / `.p12`) المتوافقة بالكامل مع **Google Play App Signing** و **Java 17+ `keytool`** و **Android Gradle Plugin**.
+**One-Click Key** هو تطبيق ويب مفتوح المصدر يعمل بالكامل داخل متصفحك (100% Client-Side) ويدعم العمل دون اتصال بالإنترنت (Offline-First PWA) لإنشاء ملفات مفاتيح أندرويد القياسية (**PKCS#12 `.p12`**) المتوافقة بالكامل مع **Google Play App Signing** و **Java 17+ `keytool`** و **Android Gradle Plugin**، مع أمر تحويل محلي اختياري إلى صيغة `JKS` القديمة عبر `keytool`.
 
 ### أبرز المزايا الأمنية والتقنية
 - **صفر اتصال بالشبكة (Zero-Network):** يفرض سياسة أمان صارمة (`connect-src 'none'`) عبر وسم `<meta>` في `index.html` (لـ GitHub Pages) وترويسات `public/_headers` (لـ Cloudflare Pages) لمنع أي طلبات شبكة صادرة، مع تضمين جميع المكتبات والخطوط محلياً دون أي روابط CDN خارجية.

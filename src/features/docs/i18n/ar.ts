@@ -50,7 +50,7 @@ export const docsAr: DocsTranslations = {
       {
         num: '4',
         title: 'التحميل والاستخدام',
-        summary: 'حفظ ملف .jks أو .p12 بأمان، إضافة بصمات SHA، وتكوين Gradle و keytool.',
+        summary: 'حفظ ملف .p12 بأمان (أو تحويله محلياً إلى .jks عند الحاجة)، إضافة بصمات SHA، وتكوين Gradle و keytool.',
       },
     ],
   },
@@ -195,9 +195,9 @@ export const docsAr: DocsTranslations = {
     breakdownHeading: 'شرح المخرجات وأين تستخدمها',
     fields: [
       {
-        name: 'ملف المفتاح (.jks أو .p12)',
-        sample: 'demo-upload-key-keystore.jks',
-        why: 'كلا الزرّين يحمّلان نفس حاوية \u2066Java 17+ PKCS#12\u2069 بالضبط. اختر \u2066.jks\u2069 لمشاريع Android Studio المعتادة.',
+        name: 'ملف المفتاح (.p12 · PKCS#12)',
+        sample: 'demo-upload-key-keystore.p12',
+        why: 'يحمّل حاوية \u2066RFC 7292 PKCS#12\u2069 حقيقية مدعومة مباشرة في \u2066Java 9+\u2069 و \u2066Android Studio\u2069 و \u2066Gradle\u2069. وإذا اشترطت أداة قديمة صيغة \u2066JKS\u2069، يمكنك تحويل الملف محلياً عبر \u2066keytool -importkeystore\u2069.',
       },
       {
         name: 'بصمة SHA-1',
@@ -221,6 +221,6 @@ export const docsAr: DocsTranslations = {
     keytoolLabel: 'مثال التحقق المحلي عبر Java 17+ keytool',
     tipHeading: 'خطأ خطير يجب تجنّبه',
     tipBody:
-      'لا ترفع ملف \u2066.jks\u2069 أو \u2066.p12\u2069 أو كلمة المرور إلى Git أبداً حتى في المستودعات الخاصة. احتفظ بنسختين احتياطيتين مشفّرتين، واضغط «مسح الذاكرة وإعادة التعيين» فور الانتهاء من التحميل.',
+      'لا ترفع ملف \u2066.p12\u2069 (أو ملف \u2066.jks\u2069 المحوّل) أو كلمة المرور إلى Git أبداً حتى في المستودعات الخاصة. احتفظ بنسختين احتياطيتين مشفّرتين، واضغط «مسح الذاكرة وإعادة التعيين» فور الانتهاء من التحميل.',
   },
 };

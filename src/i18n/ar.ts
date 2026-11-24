@@ -49,7 +49,7 @@ export const ar: Translations = {
     progressHeading: 'مراحل الإنشاء',
     specHeading: 'المواصفات التشفيرية',
     formatLabel: 'الحاوية',
-    formatValue: 'PKCS#12 (.jks / .p12)',
+    formatValue: 'PKCS#12 (.p12)',
     signatureLabel: 'خوارزمية التوقيع',
     signatureValue: 'SHA-256 with RSA',
     encryptionLabel: 'التشفير',
@@ -153,10 +153,23 @@ export const ar: Translations = {
     successNotice:
       'تم التوليد محلياً داخل الذاكرة برقم تسلسلي عشوائي موجب (CSPRNG) وترميز UTF-8 متوافق مع \u2066Java 17+\u2069.',
     downloadHeading: 'تحميل ملف المفتاح (Keystore)',
-    downloadJks: 'تحميل بصيغة \u2066.jks\u2069 (موصى به)',
-    downloadP12: 'تحميل بصيغة \u2066.p12\u2069 (\u2066PKCS#12\u2069)',
+    downloadP12: 'تحميل ملف المفتاح (\u2066.p12 · PKCS#12\u2069)',
     downloadHint:
-      'الملفان متطابقان تماماً ببنية \u2066PKCS#12\u2069 القياسية. اختر \u2066.jks\u2069 للتسمية الشائعة في Android Studio أو \u2066.p12\u2069 للتسمية القياسية الصريحة.',
+      'يصدّر ملف \u2066PKCS#12 (.p12)\u2069 قياسياً وحقيقياً وفق معيار \u2066RFC 7292\u2069 — وهو الصيغة الرسمية الافتراضية في \u2066Java 9+\u2069 و \u2066Android Studio\u2069 و \u2066Android Gradle Plugin\u2069 و \u2066Google Play\u2069.',
+    jksConvertToggle: 'هل تحتاج صيغة \u2066JKS (.jks)\u2069 القديمة؟ حوّل الملف محلياً عبر \u2066keytool\u2069',
+    jksConvertIntro:
+      'تعمل صيغة \u2066PKCS#12 (.p12)\u2069 مباشرة في \u2066Android Studio\u2069 و \u2066Gradle\u2069 الحديثين. حوّل إلى \u2066JKS\u2069 فقط إذا كانت أداة قديمة تشترط بنية \u2066JKS\u2069 الأصلية. نفّذ هذا الأمر محلياً بعد التحميل:',
+    jksConvertSourcePassNote:
+      'كلمة مرور المتجر المصدر: عند طلب كلمة مرور ملف المصدر، أدخل كلمة المرور التي أنشأتها في الخطوة 1 لملف \u2066.p12\u2069.',
+    jksConvertDestPassNote:
+      'كلمة مرور المتجر الهدف: أدخل كلمة المرور نفسها عند طلب كلمة مرور ملف \u2066JKS\u2069 الجديد لتبقى \u2066storePassword\u2069 و \u2066keyPassword\u2069 متطابقتين.',
+    jksConvertKeyPassNote:
+      'كلمة مرور المفتاح الهدف: لا يطلب أمر \u2066keytool -importkeystore\u2069 قيمة \u2066-destkeypass\u2069 عند إنشاء \u2066JKS\u2069، بل يحمي المفتاح الخاص تلقائياً بكلمة مرور ملف \u2066.p12\u2069 الأصلي. إذا اخترت كلمة مرور مختلفة لملف \u2066JKS\u2069، فعيّن \u2066ANDROID_KEY_PASSWORD\u2069 إلى كلمة مرور \u2066.p12\u2069 الأصلية (أو مرّر \u2066-destkeypass\u2069 أو استخدم \u2066keytool -keypasswd\u2069).',
+    jksConvertAliasNote:
+      'تحويل الاسم المستعار للأحرف الصغيرة: تحوّل صيغة \u2066JKS\u2069 القياسية جميع أحرف الاسم المستعار إلى أحرف صغيرة تلقائياً (\u2066Locale.ENGLISH\u2069). استخدم الاسم بالأحرف الصغيرة في \u2066Gradle\u2069 بعد التحويل.',
+    jksConvertAliasLowercasePrefix: 'قيمة \u2066keyAlias\u2069 داخل ملف \u2066JKS\u2069:',
+    jksConvertGradleNote:
+      'إعدادات \u2066Gradle\u2069 بعد التحويل: وجّه \u2066storeFile\u2069 إلى ملف \u2066.jks\u2069، وغيّر \u2066storeType\u2069 إلى \u2066"JKS"\u2069، واستخدم \u2066keyAlias\u2069 بالأحرف الصغيرة، وعيّن \u2066ANDROID_KEY_PASSWORD\u2069 إذا اختلفت كلمة مرور \u2066JKS\u2069 عن كلمة مرور \u2066.p12\u2069 الأصلية.',
     fingerprintsHeading: 'بصمات الشهادة الرقمية والبيانات التقنية',
     sha1Label: 'بصمة \u2066SHA-1\u2069',
     sha256Label: 'بصمة \u2066SHA-256\u2069',

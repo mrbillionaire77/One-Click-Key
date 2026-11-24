@@ -50,7 +50,7 @@ export default defineConfig(() => {
           name: 'One-Click Key',
           short_name: 'One-Click',
           description:
-            '100% client-side, offline-first Android Keystore (.jks / .p12) generator compatible with Google Play App Signing and Android Gradle Plugin.',
+            '100% client-side, offline-first Android Keystore PKCS#12 (.p12) generator compatible with Google Play App Signing and Android Gradle Plugin.',
           theme_color: '#0D0D0D',
           background_color: '#0D0D0D',
           display: 'standalone',

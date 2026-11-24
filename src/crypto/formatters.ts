@@ -22,16 +22,17 @@ export function formatSubjectSummary(input: Partial<KeystoreInput>): string {
 export function buildGradleSnippet(
   alias: string,
   dsl: 'kotlin' | 'groovy',
-  filename = 'release-keystore.jks',
+  filename = 'release-keystore.p12',
 ): string {
   if (dsl === 'kotlin') {
     return `android {
     signingConfigs {
         create("release") {
             storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "${filename}")
+            storeType = "PKCS12"
             storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "${alias}"
-            keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
         }
     }
 
@@ -48,9 +49,10 @@ export function buildGradleSnippet(
     signingConfigs {
         release {
             storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "${filename}")
+            storeType "PKCS12"
             storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
             keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "${alias}"
-            keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
         }
     }
 
@@ -64,8 +66,19 @@ export function buildGradleSnippet(
 }
 
 /**
- * Generates a Java 17+ keytool verification command for inspecting the generated file locally.
+ * Generates a Java 17+ keytool verification command for inspecting the generated PKCS#12 file locally.
  */
-export function buildKeytoolVerifyCommand(alias: string, filename = 'release-keystore.jks'): string {
+export function buildKeytoolVerifyCommand(alias: string, filename = 'release-keystore.p12'): string {
   return `keytool -list -v -keystore ${filename} -storetype PKCS12 -alias ${alias}`;
+}
+
+/**
+ * Generates an interactive local keytool command to convert a genuine PKCS#12 (.p12) keystore
+ * into a genuine legacy JKS (.jks) container without embedding passwords in shell history.
+ */
+export function buildKeytoolConvertToJksCommand(
+  p12Filename = 'release-keystore.p12',
+  jksFilename = 'release-keystore.jks',
+): string {
+  return `keytool -importkeystore -srckeystore ${p12Filename} -srcstoretype PKCS12 -destkeystore ${jksFilename} -deststoretype JKS`;
 }

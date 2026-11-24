@@ -9,8 +9,8 @@ export const DEMO_DATA = {
   password: 'DemoOnly#NotForProd2026!',
   entropyBits: 156,
   keySize: 2048 as const,
-  jksFilename: 'demo-upload-key-keystore.jks',
   p12Filename: 'demo-upload-key-keystore.p12',
+  jksFilename: 'demo-upload-key-keystore.jks',
   dn: {
     commonName: 'Demo Mobile Release',
     organizationalUnit: 'Android Engineering',
@@ -33,12 +33,13 @@ export const DEMO_DATA = {
   env:
     KEYSTORE_BASE64: \${{ secrets.KEYSTORE_BASE64 }}
   run: |
-    echo "$KEYSTORE_BASE64" | base64 --decode > app/demo-upload-key-keystore.jks`,
+    echo "$KEYSTORE_BASE64" | base64 --decode > app/demo-upload-key-keystore.p12`,
   gradleKotlin: `// app/build.gradle.kts (Demo Example Only)
 android {
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "demo-upload-key-keystore.jks")
+            storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "demo-upload-key-keystore.p12")
+            storeType = "PKCS12"
             storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "demo-upload-key"
             keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD")
@@ -54,7 +55,8 @@ android {
 android {
     signingConfigs {
         release {
-            storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "demo-upload-key-keystore.jks")
+            storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "demo-upload-key-keystore.p12")
+            storeType "PKCS12"
             storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
             keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "demo-upload-key"
             keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD")
@@ -67,7 +69,7 @@ android {
     }
 }`,
   keytoolVerifyCommand:
-    'keytool -list -v -keystore demo-upload-key-keystore.jks -storetype PKCS12 -alias demo-upload-key',
+    'keytool -list -v -keystore demo-upload-key-keystore.p12 -storetype PKCS12 -alias demo-upload-key',
   keytoolExpectedOutput: `Keystore type: PKCS12
 Keystore provider: SUN
 
