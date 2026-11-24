@@ -5,7 +5,11 @@ import {
   buildKeytoolConvertToJksCommand,
   buildKeytoolVerifyCommand,
 } from '@/crypto/formatters';
-import { evaluatePasswordStrength, generateSafePassword } from '@/crypto/password';
+import {
+  evaluatePasswordStrength,
+  generateSafePassword,
+  PASSWORD_CHARSET,
+} from '@/crypto/password';
 import { generateKeystoreSync, generatePositiveSerialHex } from '@/crypto/pkcs12';
 import { ar } from '@/i18n/ar';
 import { en } from '@/i18n/en';
@@ -20,7 +24,7 @@ import {
 } from '@/schemas/keystore.schema';
 
 describe('Zod Keystore Input Validation', () => {
-  it('accepts valid Step 1 configuration and rejects shell/Gradle-breaking passwords', () => {
+  it('accepts valid Step 1 configuration and rejects Gradle-breaking passwords', () => {
     const valid = step1Schema.safeParse({
       alias: 'upload-key_01',
       keySize: 2048,
@@ -117,14 +121,59 @@ describe('Zod Keystore Input Validation', () => {
 });
 
 describe('CSPRNG Password Generator & Strength Meter', () => {
-  it('generates 100 safe high-entropy passwords excluding shell/Gradle-breaking chars', () => {
+  it('generates 100 safe high-entropy passwords excluding Gradle-breaking chars and estimates ~151 bits', () => {
     for (let i = 0; i < 100; i += 1) {
       const pw = generateSafePassword(24);
       expect(pw).toHaveLength(24);
       expect(PRINTABLE_ASCII_REGEX.test(pw)).toBe(true);
       expect(FORBIDDEN_PASSWORD_CHARS_REGEX.test(pw)).toBe(false);
-      expect(evaluatePasswordStrength(pw).level).toBe('strong');
+      const strength = evaluatePasswordStrength(pw);
+      expect(strength.level).toBe('strong');
+      expect(strength.entropyBits).toBe(151);
     }
+  });
+
+  it('expands entropy pool size only when manually typed excluded characters are present', () => {
+    // Ambiguity-free lowercase (25) vs lowercase including 'l' (26)
+    expect(evaluatePasswordStrength('abcdefgh').entropyBits).toBe(Math.floor(8 * Math.log2(25)));
+    expect(evaluatePasswordStrength('abcdefgl').entropyBits).toBe(Math.floor(8 * Math.log2(26)));
+
+    // Ambiguity-free 80-char pool vs full 90-char pool (contains I, O, l, 0, 1, and extra symbol ~)
+    expect(evaluatePasswordStrength('Ab2!Ab2!Ab2!Ab2!Ab2!Ab2!').entropyBits).toBe(
+      Math.floor(24 * Math.log2(80)),
+    );
+    expect(evaluatePasswordStrength('IlO01~Ab2!Ab2!Ab2!Ab2!Ab').entropyBits).toBe(
+      Math.floor(24 * Math.log2(90)),
+    );
+  });
+
+  it('samples all 80 allowed characters without heavy statistical bias across a large sample', () => {
+    expect(PASSWORD_CHARSET).toHaveLength(80);
+
+    const counts = new Map<string, number>();
+    for (const ch of PASSWORD_CHARSET) {
+      counts.set(ch, 0);
+    }
+
+    // 500 passwords x 64 chars = 32,000 chars (~395-438 expected per char; +/-8 sigma tolerance avoids CI flakiness)
+    const sampleCount = 500;
+    const passwordLength = 64;
+    for (let i = 0; i < sampleCount; i += 1) {
+      const pw = generateSafePassword(passwordLength);
+      for (const ch of pw) {
+        const current = counts.get(ch);
+        expect(current).toBeDefined();
+        counts.set(ch, (current ?? 0) + 1);
+      }
+    }
+
+    const values = Array.from(counts.values());
+    const minCount = Math.min(...values);
+    const maxCount = Math.max(...values);
+
+    expect(counts.size).toBe(80);
+    expect(minCount).toBeGreaterThanOrEqual(220);
+    expect(maxCount).toBeLessThanOrEqual(600);
   });
 });
 

@@ -87,7 +87,7 @@ export const docsEn: DocsTranslations = {
     hidePasswordLabel: 'Hide demo password',
     tipHeading: 'Common mistake to avoid',
     tipBody:
-      'Never include " \' \\ or $ in your password — those characters often break Gradle scripts and GitHub Actions shells. Use the built-in "Generate Safe Password" button and save both your alias and password in a password manager immediately.',
+      'Never include " \' \\ or $ in your password — those characters often break Gradle scripts and string interpolation. Use the built-in "Generate Safe Password" button (always quote passwords if passed to a shell) and save both your alias and password in a password manager immediately.',
   },
   lesson2: {
     stepNum: '2',

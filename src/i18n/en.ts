@@ -91,7 +91,7 @@ export const en: Translations = {
       strong: 'Strong',
     },
     safeCharsetNote:
-      'ASCII only. Automatically excludes shell and Gradle-breaking characters (" \' \\ $).',
+      'ASCII only. Automatically excludes Gradle-breaking characters (" \' \\ $).',
     continueBtn: 'Continue to Certificate Details',
   },
   step2: {
@@ -203,7 +203,7 @@ export const en: Translations = {
     passwordMinLength: 'Password must be at least 8 characters long.',
     passwordMaxLength: 'Password must be 128 characters or fewer.',
     passwordAsciiOnly: 'Use printable ASCII characters only (no spaces or non-ASCII characters).',
-    passwordForbiddenChars: 'Avoid shell/Gradle-breaking characters: " \' \\ $',
+    passwordForbiddenChars: 'Avoid Gradle-breaking characters: " \' \\ $',
     dnRequired: 'This certificate field is required.',
     dnMaxLength: 'Must be 64 characters or fewer.',
     dnUnsafeChars: 'Control characters and line breaks are not allowed.',

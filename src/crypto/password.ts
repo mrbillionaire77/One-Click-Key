@@ -1,15 +1,16 @@
 /**
  * Cryptographically secure password generation and strength assessment.
- * Strictly excludes shell and Gradle-breaking characters: ", ', \, $
+ * Strictly excludes Gradle-breaking characters: ", ', \, $
  */
 
-const UPPERCASE = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-const LOWERCASE = 'abcdefghijkmnopqrstuvwxyz';
-const DIGITS = '23456789';
-// Safe punctuation excluding ", ', \, $, and whitespace
-const SAFE_SYMBOLS = '!@#%^&*()-_=+[]{}:;,.?/';
+const UPPERCASE = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // 24 ambiguity-free uppercase (excludes I, O)
+const LOWERCASE = 'abcdefghijkmnopqrstuvwxyz'; // 25 ambiguity-free lowercase (excludes l)
+const DIGITS = '23456789'; // 8 ambiguity-free digits (excludes 0, 1)
+// Gradle-safe punctuation excluding ", ', \, $, and whitespace
+const SAFE_SYMBOLS = '!@#%^&*()-_=+[]{}:;,.?/'; // 23 symbols
 
-const COMBINED_CHARSET = `${UPPERCASE}${LOWERCASE}${DIGITS}${SAFE_SYMBOLS}`;
+export const PASSWORD_CHARSET = `${UPPERCASE}${LOWERCASE}${DIGITS}${SAFE_SYMBOLS}`;
+const SAFE_SYMBOL_SET = new Set(SAFE_SYMBOLS);
 
 /**
  * Rejection-sampled uniform random integer in [0, max) using Web Crypto CSPRNG.
@@ -30,7 +31,7 @@ function getUniformRandomInt(max: number): number {
 }
 
 /**
- * Generates a shell- and Gradle-safe high-entropy password using CSPRNG.
+ * Generates a Gradle-safe high-entropy password using CSPRNG.
  * Guarantees at least one character from each class (upper, lower, digit, safe symbol)
  * and Fisher-Yates shuffles the output using CSPRNG.
  */
@@ -44,7 +45,7 @@ export function generateSafePassword(length = 24): string {
   ];
 
   for (let i = chars.length; i < safeLength; i += 1) {
-    chars.push(COMBINED_CHARSET[getUniformRandomInt(COMBINED_CHARSET.length)] ?? 'x');
+    chars.push(PASSWORD_CHARSET[getUniformRandomInt(PASSWORD_CHARSET.length)] ?? 'x');
   }
 
   // Cryptographic Fisher-Yates shuffle
@@ -68,6 +69,8 @@ export interface PasswordStrengthResult {
 
 /**
  * Estimates password strength based on effective character pool size and length.
+ * Uses the generator's 80-char ambiguity-free pool sizes unless the user manually
+ * enters excluded ambiguous characters (I, O, l, 0, 1) or additional ASCII symbols.
  */
 export function evaluatePasswordStrength(password: string): PasswordStrengthResult {
   if (!password) {
@@ -75,12 +78,22 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
   }
 
   let poolSize = 0;
-  if (/[a-z]/.test(password)) poolSize += 26;
-  if (/[A-Z]/.test(password)) poolSize += 26;
-  if (/[0-9]/.test(password)) poolSize += 10;
-  if (/[^a-zA-Z0-9]/.test(password)) poolSize += 28;
+  if (/[a-z]/.test(password)) {
+    poolSize += /l/.test(password) ? 26 : LOWERCASE.length;
+  }
+  if (/[A-Z]/.test(password)) {
+    poolSize += /[IO]/.test(password) ? 26 : UPPERCASE.length;
+  }
+  if (/[0-9]/.test(password)) {
+    poolSize += /[01]/.test(password) ? 10 : DIGITS.length;
+  }
+  const symbols = password.match(/[^a-zA-Z0-9]/g);
+  if (symbols) {
+    const hasExtraSymbol = symbols.some((ch) => !SAFE_SYMBOL_SET.has(ch));
+    poolSize += hasExtraSymbol ? 28 : SAFE_SYMBOLS.length;
+  }
 
-  const entropyBits = poolSize > 0 ? Math.round(password.length * Math.log2(poolSize)) : 0;
+  const entropyBits = poolSize > 0 ? Math.floor(password.length * Math.log2(poolSize)) : 0;
 
   if (password.length < 8 || entropyBits < 40) {
     return { level: 'weak', score: 1, entropyBits };

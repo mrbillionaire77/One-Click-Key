@@ -91,7 +91,7 @@ export const ar: Translations = {
       strong: 'قوية جداً',
     },
     safeCharsetNote:
-      'أحرف ASCII قياسية فقط. يستبعد تلقائياً الرموز التي تسبب أخطاء في Gradle والطرفية (\u2066" \' \\ $\u2069).',
+      'أحرف ASCII قياسية فقط. يستبعد تلقائياً الرموز التي تسبب أخطاء في Gradle (\u2066" \' \\ $\u2069).',
     continueBtn: 'المتابعة إلى بيانات الشهادة',
   },
   step2: {
@@ -203,7 +203,7 @@ export const ar: Translations = {
     passwordMinLength: 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.',
     passwordMaxLength: 'يجب ألا تتجاوز كلمة المرور 128 حرفاً.',
     passwordAsciiOnly: 'استخدم أحرف ASCII قياسية قابلة للطباعة فقط (دون مسافات أو أحرف عربية).',
-    passwordForbiddenChars: 'تجنب الرموز التي تسبب مشاكل في Gradle والطرفية: \u2066" \' \\ $\u2069',
+    passwordForbiddenChars: 'تجنب الرموز التي تسبب مشاكل في Gradle: \u2066" \' \\ $\u2069',
     dnRequired: 'هذا الحقل مطلوب في الشهادة.',
     dnMaxLength: 'يجب ألا يتجاوز النص 64 حرفاً.',
     dnUnsafeChars: 'أحرف التحكم والأسطر الجديدة غير مسموح بها.',

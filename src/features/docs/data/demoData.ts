@@ -7,7 +7,7 @@
 export const DEMO_DATA = {
   alias: 'demo-upload-key',
   password: 'DemoOnly#NotForProd2026!',
-  entropyBits: 156,
+  entropyBits: 151,
   keySize: 2048 as const,
   p12Filename: 'demo-upload-key-keystore.p12',
   jksFilename: 'demo-upload-key-keystore.jks',
