@@ -46,6 +46,9 @@ jobs:
       - name: Build production PWA bundle
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || '/' }}
+          # Optional Google Search Console ownership verification token (Repository Variable).
+          # Omitted if unset; injects only a static <meta> tag at build time with zero network calls.
+          GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
         run: |
           echo "Resolved GitHub Pages URL: ${{ steps.pages.outputs.base_url }}"
           echo "Building One-Click Key with VITE_BASE_PATH=${VITE_BASE_PATH}"

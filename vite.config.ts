@@ -13,8 +13,22 @@ function normalizeBasePath(rawBase?: string): string {
   return withLeading.endsWith('/') ? withLeading : `${withLeading}/`;
 }
 
+// Allowlist for Google Search Console HTML verification tokens (alphanumeric, `_`, `-`, 16-128 chars).
+const GOOGLE_SITE_VERIFICATION_REGEX = /^[A-Za-z0-9_-]{16,128}$/;
+
+function parseGoogleSiteVerificationToken(rawToken?: string): string | null {
+  const token = rawToken?.trim();
+  if (!token || !GOOGLE_SITE_VERIFICATION_REGEX.test(token)) {
+    return null;
+  }
+  return token;
+}
+
 export default defineConfig(() => {
   const base = normalizeBasePath(process.env.VITE_BASE_PATH);
+  const googleSiteVerification = parseGoogleSiteVerificationToken(
+    process.env.GOOGLE_SITE_VERIFICATION,
+  );
 
   return {
     base,
@@ -30,6 +44,22 @@ export default defineConfig(() => {
           return html.replace(
             /\s*<meta\s+http-equiv="Content-Security-Policy"[^>]*\/>\s*/i,
             '\n',
+          );
+        },
+      },
+      // Optional build-time Google Search Console ownership verification for official deployments.
+      // Completely inert and omitted unless GOOGLE_SITE_VERIFICATION is explicitly set to a valid token;
+      // injects only a static <meta> tag and performs zero network requests or tracking.
+      {
+        name: 'optional-google-site-verification',
+        apply: 'build' as const,
+        transformIndexHtml(html: string) {
+          if (!googleSiteVerification) {
+            return html;
+          }
+          return html.replace(
+            '</head>',
+            `    <meta name="google-site-verification" content="${googleSiteVerification}" />\n  </head>`,
           );
         },
       },
