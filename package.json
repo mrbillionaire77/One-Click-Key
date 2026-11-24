@@ -1,7 +1,7 @@
 {
   "name": "one-click-key",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "One-Click Key — 100% client-side, offline-first, open-source Android Keystore PKCS#12 (.p12) generator compatible with Google Play App Signing and Android Gradle Plugin.",
   "author": {
     "name": "mrbillionaire77",

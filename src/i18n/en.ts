@@ -166,12 +166,12 @@ export const en: Translations = {
     jksConvertDestPassNote:
       'Destination store password: Enter the same password when prompted for the destination JKS keystore password to keep storePassword and keyPassword identical.',
     jksConvertKeyPassNote:
-      'Destination key password: keytool -importkeystore does not prompt for -destkeypass when creating JKS — it automatically protects the JKS private key with the source .p12 password. If you choose a different JKS store password, set ANDROID_KEY_PASSWORD to the original .p12 password (or pass -destkeypass / run keytool -keypasswd).',
+      'Destination key password: keytool -importkeystore does not prompt for -destkeypass when creating JKS — it automatically protects the JKS private key with the source .p12 password. If you choose a different JKS store password, set keyPassword to System.getenv("ANDROID_KEY_PASSWORD") containing the original .p12 password (or pass -destkeypass / run keytool -keypasswd).',
     jksConvertAliasNote:
       'Alias lowercasing: Standard JKS automatically lowercases key aliases (Locale.ENGLISH). Use the lowercased alias in Gradle after conversion.',
     jksConvertAliasLowercasePrefix: 'Converted JKS keyAlias:',
     jksConvertGradleNote:
-      'Gradle after conversion: Point storeFile to the .jks filename, change storeType to "JKS", use the lowercased keyAlias, and set ANDROID_KEY_PASSWORD if your JKS store password differs from the original .p12 password.',
+      'Gradle after conversion: Point storeFile to the .jks filename, change storeType to "JKS", use the lowercased keyAlias, and point keyPassword to System.getenv("ANDROID_KEY_PASSWORD") only if your JKS store password differs from the original .p12 password.',
     fingerprintsHeading: 'Certificate Fingerprints & Metadata',
     sha1Label: 'SHA-1 Fingerprint',
     sha256Label: 'SHA-256 Fingerprint',
@@ -214,7 +214,7 @@ export const en: Translations = {
     aliasFormat: 'Use letters, numbers, dots, hyphens, or underscores only (start with alphanumeric).',
     aliasMaxLength: 'Key alias must be 64 characters or fewer.',
     keySizeInvalid: 'Select either 2048-bit or 4096-bit RSA.',
-    passwordMinLength: 'Password must be at least 8 characters long.',
+    passwordMinLength: 'Password must be at least 12 characters long.',
     passwordMaxLength: 'Password must be 128 characters or fewer.',
     passwordAsciiOnly: 'Use printable ASCII characters only (no spaces or non-ASCII characters).',
     passwordForbiddenChars: 'Avoid Gradle-breaking characters: " \' \\ $',
@@ -227,7 +227,7 @@ export const en: Translations = {
       'Certificate expiration must be after October 22, 2033 for Google Play compatibility.',
   },
   footer: {
-    licenseNotice: 'MIT License · Attribution required',
+    licenseNotice: 'MIT License · Open Source',
     createdBy: 'Maintained by',
     sourceCode: 'Source Repository',
     beginnerGuide: 'Beginner Guide',

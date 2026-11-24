@@ -28,11 +28,12 @@ export function buildGradleSnippet(
     return `android {
     signingConfigs {
         create("release") {
+            val keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
             storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "${filename}")
             storeType = "PKCS12"
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            storePassword = keystorePassword
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "${alias}"
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            keyPassword = keystorePassword
         }
     }
 
@@ -48,11 +49,12 @@ export function buildGradleSnippet(
   return `android {
     signingConfigs {
         release {
+            def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
             storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "${filename}")
             storeType "PKCS12"
-            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            storePassword keystorePassword
             keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "${alias}"
-            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            keyPassword keystorePassword
         }
     }
 

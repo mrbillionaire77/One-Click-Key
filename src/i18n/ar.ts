@@ -166,12 +166,12 @@ export const ar: Translations = {
     jksConvertDestPassNote:
       'كلمة مرور المتجر الهدف: أدخل كلمة المرور نفسها عند طلب كلمة مرور ملف \u2066JKS\u2069 الجديد لتبقى \u2066storePassword\u2069 و \u2066keyPassword\u2069 متطابقتين.',
     jksConvertKeyPassNote:
-      'كلمة مرور المفتاح الهدف: لا يطلب أمر \u2066keytool -importkeystore\u2069 قيمة \u2066-destkeypass\u2069 عند إنشاء \u2066JKS\u2069، بل يحمي المفتاح الخاص تلقائياً بكلمة مرور ملف \u2066.p12\u2069 الأصلي. إذا اخترت كلمة مرور مختلفة لملف \u2066JKS\u2069، فعيّن \u2066ANDROID_KEY_PASSWORD\u2069 إلى كلمة مرور \u2066.p12\u2069 الأصلية (أو مرّر \u2066-destkeypass\u2069 أو استخدم \u2066keytool -keypasswd\u2069).',
+      'كلمة مرور المفتاح الهدف: لا يطلب أمر \u2066keytool -importkeystore\u2069 قيمة \u2066-destkeypass\u2069 عند إنشاء \u2066JKS\u2069، بل يحمي المفتاح الخاص تلقائياً بكلمة مرور ملف \u2066.p12\u2069 الأصلي. إذا اخترت كلمة مرور مختلفة لملف \u2066JKS\u2069، فاجعل \u2066keyPassword\u2069 يقرأ \u2066System.getenv("ANDROID_KEY_PASSWORD")\u2069 بقيمة كلمة مرور \u2066.p12\u2069 الأصلية (أو مرّر \u2066-destkeypass\u2069 أو استخدم \u2066keytool -keypasswd\u2069).',
     jksConvertAliasNote:
       'تحويل الاسم المستعار للأحرف الصغيرة: تحوّل صيغة \u2066JKS\u2069 القياسية جميع أحرف الاسم المستعار إلى أحرف صغيرة تلقائياً (\u2066Locale.ENGLISH\u2069). استخدم الاسم بالأحرف الصغيرة في \u2066Gradle\u2069 بعد التحويل.',
     jksConvertAliasLowercasePrefix: 'قيمة \u2066keyAlias\u2069 داخل ملف \u2066JKS\u2069:',
     jksConvertGradleNote:
-      'إعدادات \u2066Gradle\u2069 بعد التحويل: وجّه \u2066storeFile\u2069 إلى ملف \u2066.jks\u2069، وغيّر \u2066storeType\u2069 إلى \u2066"JKS"\u2069، واستخدم \u2066keyAlias\u2069 بالأحرف الصغيرة، وعيّن \u2066ANDROID_KEY_PASSWORD\u2069 إذا اختلفت كلمة مرور \u2066JKS\u2069 عن كلمة مرور \u2066.p12\u2069 الأصلية.',
+      'إعدادات \u2066Gradle\u2069 بعد التحويل: وجّه \u2066storeFile\u2069 إلى ملف \u2066.jks\u2069، وغيّر \u2066storeType\u2069 إلى \u2066"JKS"\u2069، واستخدم \u2066keyAlias\u2069 بالأحرف الصغيرة، ووجّه \u2066keyPassword\u2069 إلى \u2066System.getenv("ANDROID_KEY_PASSWORD")\u2069 فقط إذا اختلفت كلمة مرور \u2066JKS\u2069 عن كلمة مرور \u2066.p12\u2069 الأصلية.',
     fingerprintsHeading: 'بصمات الشهادة الرقمية والبيانات التقنية',
     sha1Label: 'بصمة \u2066SHA-1\u2069',
     sha256Label: 'بصمة \u2066SHA-256\u2069',
@@ -214,7 +214,7 @@ export const ar: Translations = {
     aliasFormat: 'استخدم أحرفاً إنجليزية وأرقاماً ونقاطاً وشرطات فقط (تبدأ بحرف أو رقم).',
     aliasMaxLength: 'يجب ألا يتجاوز الاسم المستعار 64 حرفاً.',
     keySizeInvalid: 'اختر إما 2048-bit أو 4096-bit.',
-    passwordMinLength: 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.',
+    passwordMinLength: 'يجب أن تتكون كلمة المرور من 12 حرفاً على الأقل.',
     passwordMaxLength: 'يجب ألا تتجاوز كلمة المرور 128 حرفاً.',
     passwordAsciiOnly: 'استخدم أحرف ASCII قياسية قابلة للطباعة فقط (دون مسافات أو أحرف عربية).',
     passwordForbiddenChars: 'تجنب الرموز التي تسبب مشاكل في Gradle: \u2066" \' \\ $\u2069',
@@ -227,7 +227,7 @@ export const ar: Translations = {
       'يجب أن يتجاوز تاريخ انتهاء الشهادة 22 أكتوبر 2033 للتوافق مع متطلبات Google Play.',
   },
   footer: {
-    licenseNotice: 'رخصة MIT · يجب الإشارة للمصدر عند إعادة الاستخدام',
+    licenseNotice: 'رخصة MIT · مفتوح المصدر',
     createdBy: 'تطوير',
     sourceCode: 'المستودع المفتوح',
     beginnerGuide: 'الدليل التعليمي',

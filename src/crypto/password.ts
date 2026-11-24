@@ -95,7 +95,7 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
 
   const entropyBits = poolSize > 0 ? Math.floor(password.length * Math.log2(poolSize)) : 0;
 
-  if (password.length < 8 || entropyBits < 40) {
+  if (password.length < 12 || entropyBits < 40) {
     return { level: 'weak', score: 1, entropyBits };
   }
   if (entropyBits < 60) {

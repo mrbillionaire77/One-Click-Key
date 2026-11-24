@@ -13,7 +13,7 @@
 - **Secret Lifecycle & Browser Memory Boundaries**:
   - Plaintext `form.password` is cleared from React state immediately upon entering Step 4.
   - Base64 export is computed lazily on demand only when explicitly revealed or copied.
-  - Leaving the page or navigating to `#/docs` while a generated keystore has not yet been downloaded triggers a `beforeunload` / inline leave-guard confirmation.
+  - Leaving the page, navigating to `#/docs`, or triggering browser Back/Forward / manual hash edits while a generated keystore has not yet been downloaded triggers a `beforeunload` / inline leave-guard confirmation and restores `#/` without unmounting the wizard or wiping RAM.
   - Clicking **Wipe Memory & Reset** (or confirming **Wipe & Leave**) zeroes the generated `Uint8Array` buffer (`fill(0)`), clears volatile React state, and terminates any active worker.
   - **Opt-In Active Clipboard Clear**: If a secret (password or Base64) was copied during the session, Step 4 offers an unchecked-by-default **"Also clear active clipboard"** checkbox. Only when explicitly checked and clicked inside **Wipe Memory & Reset** does the app call `navigator.clipboard.writeText('')` synchronously (never `readText()`, never in the background, and never on **Wipe & Leave**).
   - *Inherent JavaScript / OS Limitations:* JavaScript strings (e.g., DOM input values, revealed Base64 text) are immutable and garbage-collected asynchronously by the browser engine, and web applications cannot erase OS-level clipboard history managers or process swap memory.

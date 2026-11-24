@@ -68,7 +68,7 @@ You do not need to trust this app — verify it directly in your browser:
 │   ├── schemas/                 # Strict Zod input validation & sanitization rules
 │   └── __tests__/               # Vitest cryptographic, validation & Docs router test suite
 ├── DEPLOY.md                    # GitHub Pages, custom domain & Cloudflare Pages deployment guide
-├── LICENSE                      # MIT License with attribution notice
+├── LICENSE                      # MIT License
 ├── SECURITY.md                  # Security guarantees & vulnerability reporting
 └── CONTRIBUTING.md              # Contributor setup & quality standards
 ```
@@ -128,7 +128,7 @@ See **[DEPLOY.md](./DEPLOY.md)** for full step-by-step instructions for GitHub P
 
 ---
 
-## License & Attribution
+## License
 
 Released under the [MIT License](./LICENSE).
-Created by [https://github.com/mrbillionaire77](https://github.com/mrbillionaire77). Any derivative work, redistribution, or deployment must credit `https://github.com/mrbillionaire77` and link back to [https://github.com/mrbillionaire77/One-Click-Key](https://github.com/mrbillionaire77/One-Click-Key).
+Created by [https://github.com/mrbillionaire77](https://github.com/mrbillionaire77) ([One-Click Key](https://github.com/mrbillionaire77/One-Click-Key)). Preserve the copyright and permission notice in copies or substantial portions of the Software per the MIT License.

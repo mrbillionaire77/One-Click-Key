@@ -30,6 +30,6 @@ npm run build       # Production Vite + PWA bundle verification
 4. **Java 17+ & Google Play Interoperability**: Any change to `src/crypto/` must be backed by unit tests verifying positive X.509 serial numbers, UTF-8 DN encoding, `localKeyId` binding, and valid PKCS#12 parsing.
 5. **Bilingual Parity**: Every user-visible string must be added to both English (`en`) and Arabic (`ar`) translation dictionaries in `src/i18n/`, preserving `dir="ltr"` isolation on technical fields.
 
-## Attribution & License
+## License
 
-By contributing, you agree that your contributions will be licensed under the project's [MIT License](./LICENSE), maintaining attribution to `https://github.com/mrbillionaire77` and `https://github.com/mrbillionaire77/One-Click-Key`.
+By contributing, you agree that your contributions will be licensed under the project's [MIT License](./LICENSE).

@@ -14,6 +14,12 @@ export const FORBIDDEN_PASSWORD_CHARS_REGEX = /["'\\$]/;
 export const PRINTABLE_ASCII_REGEX = /^[\x21-\x7E]+$/;
 
 /**
+ * Minimum manual keystore password length (aligned with NIST SP 800-63B guidance
+ * while preserving mobile-friendly 50,000 PBKDF2-HMAC-SHA256 iterations).
+ */
+export const MIN_PASSWORD_LENGTH = 12;
+
+/**
  * Valid alias pattern for Java KeyStore / Android Gradle Plugin signingConfigs.
  * Restricts to safe ASCII tokens without whitespace or shell metacharacters.
  */
@@ -63,7 +69,7 @@ export const step1Schema = z.object({
   keySize: keySizeSchema,
   password: z
     .string()
-    .min(8, { message: 'passwordMinLength' })
+    .min(MIN_PASSWORD_LENGTH, { message: 'passwordMinLength' })
     .max(128, { message: 'passwordMaxLength' })
     .refine((val) => !FORBIDDEN_PASSWORD_CHARS_REGEX.test(val), {
       message: 'passwordForbiddenChars',

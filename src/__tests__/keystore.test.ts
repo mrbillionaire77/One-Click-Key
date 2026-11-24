@@ -24,6 +24,7 @@ import {
   FORBIDDEN_PASSWORD_CHARS_REGEX,
   GOOGLE_PLAY_MIN_EXPIRY,
   keystoreInputSchema,
+  MIN_PASSWORD_LENGTH,
   PRINTABLE_ASCII_REGEX,
   step1Schema,
   step2Schema,
@@ -60,6 +61,44 @@ describe('Zod Keystore Input Validation', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe('passwordAsciiOnly');
+    }
+  });
+
+  it('enforces 12-to-128 character manual password length boundaries', () => {
+    expect(MIN_PASSWORD_LENGTH).toBe(12);
+
+    const tooShort = step1Schema.safeParse({
+      alias: 'upload-key',
+      keySize: 2048,
+      password: 'Abcdef1234!', // 11 chars
+    });
+    expect(tooShort.success).toBe(false);
+    if (!tooShort.success) {
+      expect(tooShort.error.issues[0]?.message).toBe('passwordMinLength');
+    }
+
+    const exactMin = step1Schema.safeParse({
+      alias: 'upload-key',
+      keySize: 2048,
+      password: 'Abcdef1234!#', // 12 chars
+    });
+    expect(exactMin.success).toBe(true);
+
+    const exactMax = step1Schema.safeParse({
+      alias: 'upload-key',
+      keySize: 2048,
+      password: 'A'.repeat(128),
+    });
+    expect(exactMax.success).toBe(true);
+
+    const tooLong = step1Schema.safeParse({
+      alias: 'upload-key',
+      keySize: 2048,
+      password: 'A'.repeat(129),
+    });
+    expect(tooLong.success).toBe(false);
+    if (!tooLong.success) {
+      expect(tooLong.error.issues[0]?.message).toBe('passwordMaxLength');
     }
   });
 
@@ -139,7 +178,11 @@ describe('CSPRNG Password Generator & Strength Meter', () => {
     }
   });
 
-  it('expands entropy pool size only when manually typed excluded characters are present', () => {
+  it('expands entropy pool size only when manually typed excluded characters are present and marks <12 chars weak', () => {
+    // Passwords shorter than 12 chars are always rated weak regardless of pool size
+    expect(evaluatePasswordStrength('Ab2!Ab2!Ab2').level).toBe('weak'); // 11 chars
+    expect(evaluatePasswordStrength('Ab2!Ab2!Ab2!').level).not.toBe('weak'); // 12 chars
+
     // Ambiguity-free lowercase (25) vs lowercase including 'l' (26)
     expect(evaluatePasswordStrength('abcdefgh').entropyBits).toBe(Math.floor(8 * Math.log2(25)));
     expect(evaluatePasswordStrength('abcdefgl').entropyBits).toBe(Math.floor(8 * Math.log2(26)));
@@ -355,21 +398,23 @@ describe('PKCS#12 Cryptographic Generation & Java 17+ Interoperability', () => {
     );
 
     expect(kts).toContain('create("release")');
+    expect(kts).toContain('val keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""');
     expect(kts).toContain('storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "upload-key-keystore.p12")');
     expect(kts).toContain('storeType = "PKCS12"');
+    expect(kts).toContain('storePassword = keystorePassword');
     expect(kts).toContain('keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "upload-key"');
-    expect(kts).toContain(
-      'keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""',
-    );
+    expect(kts).toContain('keyPassword = keystorePassword');
+    expect(kts).not.toContain('ANDROID_KEY_PASSWORD');
     expect(defaultKts).toContain('"release-keystore.p12"');
 
     expect(groovy).toContain('signingConfigs {');
+    expect(groovy).toContain('def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""');
     expect(groovy).toContain('storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "upload-key-keystore.p12")');
     expect(groovy).toContain('storeType "PKCS12"');
+    expect(groovy).toContain('storePassword keystorePassword');
     expect(groovy).toContain('keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "upload-key"');
-    expect(groovy).toContain(
-      'keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""',
-    );
+    expect(groovy).toContain('keyPassword keystorePassword');
+    expect(groovy).not.toContain('ANDROID_KEY_PASSWORD');
 
     expect(verifyCmd).toBe(
       'keytool -list -v -keystore upload-key-keystore.p12 -storetype PKCS12 -alias upload-key',

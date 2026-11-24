@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type DocsRoute =
   | '/docs'
@@ -57,24 +57,99 @@ export function routeToHash(route: AppRoute): string {
   return `#${route}`;
 }
 
-export function useHashRoute() {
+export interface GuardedHashChangeResult {
+  blocked: boolean;
+  nextRoute: AppRoute;
+  restoreHash: string | null;
+}
+
+/**
+ * Pure hash-change guard evaluator used by `useHashRoute` and unit tests.
+ * When a browser Back/Forward or manual hash edit attempts to leave a guarded route,
+ * returns `blocked: true` along with the hash to restore via `history.replaceState`.
+ */
+export function resolveGuardedHashChange(
+  currentRoute: AppRoute,
+  rawHash: string,
+  shouldBlockNavigation?: (nextRoute: AppRoute, currentRoute: AppRoute) => boolean,
+): GuardedHashChangeResult {
+  const nextRoute = parseSafeHashRoute(rawHash);
+  if (nextRoute !== currentRoute && shouldBlockNavigation?.(nextRoute, currentRoute)) {
+    return {
+      blocked: true,
+      nextRoute,
+      restoreHash: routeToHash(currentRoute),
+    };
+  }
+
+  return {
+    blocked: false,
+    nextRoute,
+    restoreHash: null,
+  };
+}
+
+export interface UseHashRouteOptions {
+  shouldBlockNavigation?: (nextRoute: AppRoute, currentRoute: AppRoute) => boolean;
+  onBlockedNavigation?: (blockedRoute: AppRoute) => void;
+}
+
+export interface NavigateOptions {
+  bypassGuard?: boolean;
+}
+
+export function useHashRoute(options?: UseHashRouteOptions) {
   const [route, setRoute] = useState<AppRoute>(() =>
     typeof window === 'undefined' ? '/' : parseSafeHashRoute(window.location.hash),
   );
+  const currentRouteRef = useRef<AppRoute>(route);
+  const optionsRef = useRef<UseHashRouteOptions | undefined>(options);
+
+  useEffect(() => {
+    currentRouteRef.current = route;
+  }, [route]);
+
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   useEffect(() => {
     const syncFromHash = () => {
-      const next = parseSafeHashRoute(window.location.hash);
-      setRoute(next);
+      const result = resolveGuardedHashChange(
+        currentRouteRef.current,
+        window.location.hash,
+        optionsRef.current?.shouldBlockNavigation,
+      );
+
+      if (result.blocked) {
+        if (result.restoreHash && window.location.hash !== result.restoreHash) {
+          window.history.replaceState(null, '', result.restoreHash);
+        }
+        optionsRef.current?.onBlockedNavigation?.(result.nextRoute);
+        return;
+      }
+
+      currentRouteRef.current = result.nextRoute;
+      setRoute(result.nextRoute);
     };
 
     window.addEventListener('hashchange', syncFromHash);
     return () => window.removeEventListener('hashchange', syncFromHash);
   }, []);
 
-  const navigate = useCallback((target: AppRoute) => {
+  const navigate = useCallback((target: AppRoute, navOptions?: NavigateOptions) => {
     const safeTarget = parseSafeHashRoute(routeToHash(target));
+    if (
+      !navOptions?.bypassGuard &&
+      safeTarget !== currentRouteRef.current &&
+      optionsRef.current?.shouldBlockNavigation?.(safeTarget, currentRouteRef.current)
+    ) {
+      optionsRef.current?.onBlockedNavigation?.(safeTarget);
+      return;
+    }
+
     const nextHash = routeToHash(safeTarget);
+    currentRouteRef.current = safeTarget;
     if (window.location.hash !== nextHash) {
       window.location.hash = nextHash;
     } else {

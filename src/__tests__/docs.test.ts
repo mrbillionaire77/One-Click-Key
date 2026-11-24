@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { DEMO_DATA } from '@/features/docs/data/demoData';
 import { docsAr } from '@/features/docs/i18n/ar';
 import { docsEn } from '@/features/docs/i18n/en';
-import { isDocsAppRoute, parseSafeHashRoute, routeToHash } from '@/features/docs/router';
+import {
+  isDocsAppRoute,
+  parseSafeHashRoute,
+  resolveGuardedHashChange,
+  routeToHash,
+} from '@/features/docs/router';
 import { formatCertificateDate } from '@/lib/formatDate';
 
 function collectStrings(obj: unknown): string[] {
@@ -65,6 +70,43 @@ describe('Interactive Docs — Allowlisted Hash Router & XSS Prevention', () => 
     expect(isDocsAppRoute('/docs')).toBe(true);
     expect(isDocsAppRoute('/docs/setup/4')).toBe(true);
     expect(routeToHash('/docs/setup/2')).toBe('#/docs/setup/2');
+  });
+
+  it('blocks hashchange navigation to /docs while an un-downloaded keystore guard is active and restores #/', () => {
+    const guarded = (nextRoute: '/' | '/docs' | '/docs/setup/1' | '/docs/setup/2' | '/docs/setup/3' | '/docs/setup/4') =>
+      isDocsAppRoute(nextRoute);
+
+    // Back/Forward or manual hash edit to #/docs/setup/2 while on / with active guard
+    const blocked = resolveGuardedHashChange('/', '#/docs/setup/2', guarded);
+    expect(blocked).toEqual({
+      blocked: true,
+      nextRoute: '/docs/setup/2',
+      restoreHash: '#/',
+    });
+
+    // Manual hash edit to #/docs is also blocked and returns restoreHash '#/'
+    const blockedRootDocs = resolveGuardedHashChange('/', '#/docs', guarded);
+    expect(blockedRootDocs).toEqual({
+      blocked: true,
+      nextRoute: '/docs',
+      restoreHash: '#/',
+    });
+
+    // Staying on '/' (or resolving an unknown non-docs hash to '/') is not blocked
+    const sameRoute = resolveGuardedHashChange('/', '#/unknown-path', guarded);
+    expect(sameRoute).toEqual({
+      blocked: false,
+      nextRoute: '/',
+      restoreHash: null,
+    });
+
+    // Once downloaded or wiped (guard inactive), hashchange to #/docs/setup/1 succeeds
+    const allowed = resolveGuardedHashChange('/', '#/docs/setup/1', () => false);
+    expect(allowed).toEqual({
+      blocked: false,
+      nextRoute: '/docs/setup/1',
+      restoreHash: null,
+    });
   });
 });
 

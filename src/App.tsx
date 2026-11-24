@@ -1,13 +1,19 @@
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Loader2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { AppFooter } from '@/components/AppFooter';
 import { AppHeader } from '@/components/AppHeader';
 import { LanguageSwitchOverlay } from '@/components/LanguageSwitchOverlay';
 import { PWAUpdateBanner } from '@/components/PWAUpdateBanner';
 import { Button } from '@/components/ui/button';
 import { useKeystoreWorker } from '@/crypto/useKeystoreWorker';
-import { isDocsAppRoute, routeToHash, useHashRoute, type AppRoute } from '@/features/docs/router';
+import {
+  isDocsAppRoute,
+  routeToHash,
+  useHashRoute,
+  type AppRoute,
+  type NavigateOptions,
+} from '@/features/docs/router';
 import { Step1KeySecurity } from '@/features/wizard/Step1KeySecurity';
 import { Step2CertificateDn } from '@/features/wizard/Step2CertificateDn';
 import { Step3ReviewGenerate } from '@/features/wizard/Step3ReviewGenerate';
@@ -35,10 +41,15 @@ function WizardWorkspace({
   theme,
   onToggleTheme,
   onNavigate,
+  onGuardChange,
 }: {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
-  onNavigate: (route: AppRoute) => void;
+  onNavigate: (route: AppRoute, options?: NavigateOptions) => void;
+  onGuardChange: (
+    shouldBlock: () => boolean,
+    onBlocked: (target: AppRoute) => void,
+  ) => void;
 }) {
   const { t, dir } = useI18n();
   const [step, setStep] = useState<WizardStep>(1);
@@ -51,6 +62,8 @@ function WizardWorkspace({
 
   const { isGenerating, stage, error, artifact, generate, cancel, wipeArtifact } =
     useKeystoreWorker();
+
+  const hasUndownloadedArtifactRef = useRef(false);
 
   const updateForm = (patch: Partial<WizardFormState>) => {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -74,16 +87,36 @@ function WizardWorkspace({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [artifact, hasDownloaded]);
 
+  useEffect(() => {
+    hasUndownloadedArtifactRef.current = artifact !== null && !hasDownloaded;
+  }, [artifact, hasDownloaded]);
+
+  useEffect(() => {
+    onGuardChange(
+      () => hasUndownloadedArtifactRef.current,
+      (target: AppRoute) => {
+        setPendingRoute(target);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+    );
+    return () => {
+      onGuardChange(
+        () => false,
+        () => {},
+      );
+    };
+  }, [onGuardChange]);
+
   const handleGuardedNavigate = useCallback(
     (target: AppRoute) => {
-      if (artifact !== null && !hasDownloaded && isDocsAppRoute(target)) {
+      if (hasUndownloadedArtifactRef.current && isDocsAppRoute(target)) {
         setPendingRoute(target);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       onNavigate(target);
     },
-    [artifact, hasDownloaded, onNavigate],
+    [onNavigate],
   );
 
   const handleGenerate = () => {
@@ -106,6 +139,7 @@ function WizardWorkspace({
       timeoutMessage: t.step3.timeoutError,
       onComplete: () => {
         // Clear plaintext password from React state as soon as PKCS#12 packaging finishes
+        hasUndownloadedArtifactRef.current = true;
         setForm((prev) => ({ ...prev, password: '' }));
         setHasDownloaded(false);
         setPendingRoute(null);
@@ -117,6 +151,7 @@ function WizardWorkspace({
   };
 
   const handleWipeAndReset = () => {
+    hasUndownloadedArtifactRef.current = false;
     wipeArtifact();
     setSecretCopiedInSession(false);
     setForm({ ...INITIAL_WIZARD_STATE });
@@ -162,12 +197,13 @@ function WizardWorkspace({
                 size="sm"
                 onClick={() => {
                   const target = pendingRoute;
+                  hasUndownloadedArtifactRef.current = false;
                   wipeArtifact();
                   setSecretCopiedInSession(false);
                   setForm({ ...INITIAL_WIZARD_STATE });
                   setHasDownloaded(false);
                   setPendingRoute(null);
-                  onNavigate(target);
+                  onNavigate(target, { bypassGuard: true });
                 }}
               >
                 {t.step4.leaveGuardLeave}
@@ -255,6 +291,7 @@ function WizardWorkspace({
                       artifact={artifact}
                       secretCopiedInSession={secretCopiedInSession}
                       onDownloaded={() => {
+                        hasUndownloadedArtifactRef.current = false;
                         setHasDownloaded(true);
                         setPendingRoute(null);
                       }}
@@ -301,7 +338,24 @@ function AppRouterShell({
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
 }) {
-  const { route, navigate } = useHashRoute();
+  const shouldBlockGuardRef = useRef<() => boolean>(() => false);
+  const onBlockedGuardRef = useRef<(target: AppRoute) => void>(() => {});
+
+  const handleGuardChange = useCallback(
+    (shouldBlock: () => boolean, onBlocked: (target: AppRoute) => void) => {
+      shouldBlockGuardRef.current = shouldBlock;
+      onBlockedGuardRef.current = onBlocked;
+    },
+    [],
+  );
+
+  const { route, navigate } = useHashRoute({
+    shouldBlockNavigation: (nextRoute) =>
+      isDocsAppRoute(nextRoute) && shouldBlockGuardRef.current(),
+    onBlockedNavigation: (blockedRoute) => {
+      onBlockedGuardRef.current(blockedRoute);
+    },
+  });
 
   if (isDocsAppRoute(route)) {
     return (
@@ -316,7 +370,14 @@ function AppRouterShell({
     );
   }
 
-  return <WizardWorkspace theme={theme} onToggleTheme={onToggleTheme} onNavigate={navigate} />;
+  return (
+    <WizardWorkspace
+      theme={theme}
+      onToggleTheme={onToggleTheme}
+      onNavigate={navigate}
+      onGuardChange={handleGuardChange}
+    />
+  );
 }
 
 export default function App() {

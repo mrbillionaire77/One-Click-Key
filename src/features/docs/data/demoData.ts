@@ -38,11 +38,12 @@ export const DEMO_DATA = {
 android {
     signingConfigs {
         create("release") {
+            val keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
             storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "demo-upload-key-keystore.p12")
             storeType = "PKCS12"
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            storePassword = keystorePassword
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "demo-upload-key"
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyPassword = keystorePassword
         }
     }
     buildTypes {
@@ -55,11 +56,12 @@ android {
 android {
     signingConfigs {
         release {
+            def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
             storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "demo-upload-key-keystore.p12")
             storeType "PKCS12"
-            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            storePassword keystorePassword
             keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "demo-upload-key"
-            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyPassword keystorePassword
         }
     }
     buildTypes {
